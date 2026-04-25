@@ -1,15 +1,18 @@
-cat > .gitignore << 'EOF'
 # Dependencias
 node_modules/
-frontend/node_modules/
-backend/node_modules/
 
 # Variables de entorno
 .env
-
-# Vite build
-frontend/dist/
+*.env
 
 # Logs
 *.log
-EOF
+npm-debug.log*
+
+# Build
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
