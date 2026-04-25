@@ -1,0 +1,15 @@
+cat > .gitignore << 'EOF'
+# Dependencias
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Variables de entorno
+.env
+
+# Vite build
+frontend/dist/
+
+# Logs
+*.log
+EOF
