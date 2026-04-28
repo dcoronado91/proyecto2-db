@@ -12,6 +12,7 @@ services:
     volumes:
       - ./db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
       - ./db/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+      - ./db/03_views.sql:/docker-entrypoint-initdb.d/03_views.sql
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
