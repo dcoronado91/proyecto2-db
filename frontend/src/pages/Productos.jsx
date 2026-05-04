@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
+import { getImagen } from '../data/imagenes'
 
 export default function Productos() {
   const [productos, setProductos] = useState([])
   const [loading,   setLoading]   = useState(true)
   const [error,     setError]     = useState('')
   const [busqueda,  setBusqueda]  = useState('')
+  const navigate = useNavigate()
 
   useEffect(() => {
     api.get('/productos')
@@ -19,22 +22,14 @@ export default function Productos() {
     p.categoria.toLowerCase().includes(busqueda.toLowerCase())
   )
 
-  const stockColor = (stock) => {
-    if (stock < 8)  return 'var(--danger)'
-    if (stock < 20) return 'var(--warning)'
-    return 'var(--success)'
-  }
-
   if (loading) return (
-    <div className="p-8">
-      <p className="font-data text-sm" style={{ color: 'var(--muted)' }}>
-        Cargando productos<span style={{ animation: 'pulse 1s infinite' }}>...</span>
-      </p>
+    <div style={{ padding: '40px 32px' }}>
+      <p className="font-data text-sm" style={{ color: 'var(--muted)' }}>Cargando productos...</p>
     </div>
   )
 
   if (error) return (
-    <div className="p-8">
+    <div style={{ padding: '40px 32px' }}>
       <p className="font-data text-sm" style={{ color: 'var(--danger)' }}>⚠ {error}</p>
     </div>
   )
@@ -43,17 +38,15 @@ export default function Productos() {
     <div style={{ padding: '40px 32px' }}>
 
       {/* Encabezado */}
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '28px' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '32px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px' }}>
           <h2 className="font-display font-bold" style={{ fontSize: '2rem', color: 'var(--text)', margin: 0 }}>
             Productos
           </h2>
           <span className="font-data text-xs" style={{ color: 'var(--muted)' }}>
-            {filtrados.length} / {productos.length} registros
+            {filtrados.length} / {productos.length}
           </span>
         </div>
-
-        {/* Buscador */}
         <input
           type="text"
           placeholder="Buscar producto o categoría..."
@@ -69,70 +62,117 @@ export default function Productos() {
             padding:      '8px 14px',
             outline:      'none',
             width:        '260px',
-            transition:   'border-color 0.2s',
           }}
           onFocus={e => e.target.style.borderColor = 'var(--accent)'}
           onBlur={e  => e.target.style.borderColor = 'var(--border)'}
         />
       </div>
 
-      {/* Tabla */}
-      <div style={{ border: '1px solid var(--border)', borderRadius: '2px', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-          <thead>
-            <tr style={{ background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
-              {['Nombre', 'Categoría', 'Proveedor', 'Precio', 'Stock'].map(h => (
-                <th key={h} style={{
-                  padding:       '12px 20px',
-                  textAlign:     h === 'Precio' || h === 'Stock' ? 'right' : 'left',
-                  fontFamily:    'DM Mono, monospace',
-                  fontSize:      '0.7rem',
-                  letterSpacing: '0.15em',
-                  color:         'var(--muted)',
-                  fontWeight:    500,
-                  textTransform: 'uppercase',
-                }}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtrados.map((p, i) => (
-              <tr key={p.id} style={{
-                background:  i % 2 === 0 ? 'var(--surface)' : 'var(--bg)',
-                borderBottom:'1px solid var(--border)',
-                transition:  'background 0.1s',
-                cursor:      'default',
-              }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
-                onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? 'var(--surface)' : 'var(--bg)'}
-              >
-                <td style={{ padding: '12px 20px', color: 'var(--text)', fontWeight: 500 }}>
-                  {p.nombre}
-                </td>
-                <td style={{ padding: '12px 20px', fontFamily: 'DM Mono, monospace', fontSize: '0.75rem', color: 'var(--muted)' }}>
-                  {p.categoria}
-                </td>
-                <td style={{ padding: '12px 20px', fontFamily: 'DM Mono, monospace', fontSize: '0.75rem', color: 'var(--muted)' }}>
-                  {p.proveedor}
-                </td>
-                <td style={{ padding: '12px 20px', textAlign: 'right', fontFamily: 'DM Mono, monospace', color: 'var(--accent)', fontWeight: 500 }}>
-                  Q{parseFloat(p.precio).toLocaleString('es-GT', { minimumFractionDigits: 2 })}
-                </td>
-                <td style={{ padding: '12px 20px', textAlign: 'right', fontFamily: 'DM Mono, monospace', fontWeight: 500, color: stockColor(p.stock) }}>
-                  {p.stock}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Grid 5 columnas */}
+      <div style={{
+        display:             'grid',
+        gridTemplateColumns: 'repeat(5, 1fr)',
+        gap:                 '16px',
+      }}>
+        {filtrados.map(p => (
+          <ProductCard key={p.id} producto={p} onClick={() => navigate(`/producto/${p.id}`)} />
+        ))}
+      </div>
 
-        {filtrados.length === 0 && (
-          <div style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)', fontFamily: 'DM Mono, monospace', fontSize: '0.8rem' }}>
-            No se encontraron resultados para "{busqueda}"
+      {filtrados.length === 0 && (
+        <div style={{ padding: '48px', textAlign: 'center', color: 'var(--muted)', fontFamily: 'DM Mono', fontSize: '0.8rem' }}>
+          Sin resultados para "{busqueda}"
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ProductCard({ producto: p, onClick }) {
+  const [imgError, setImgError] = useState(false)
+  const stockColor = p.stock < 8 ? 'var(--danger)' : p.stock < 20 ? 'var(--warning)' : 'var(--success)'
+
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background:   'var(--surface)',
+        border:       '1px solid var(--border)',
+        borderRadius: '2px',
+        cursor:       'pointer',
+        overflow:     'hidden',
+        transition:   'border-color 0.15s, transform 0.15s',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = 'var(--accent)'
+        e.currentTarget.style.transform   = 'translateY(-2px)'
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = 'var(--border)'
+        e.currentTarget.style.transform   = 'translateY(0)'
+      }}
+    >
+      {/* Imagen */}
+      <div style={{ width: '100%', aspectRatio: '4/3', overflow: 'hidden', background: 'var(--surface-2)', position: 'relative' }}>
+        {imgError || !getImagen(p.id) ? (
+          <div style={{
+            width: '100%', height: '100%', minHeight: '120px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ fontFamily: 'DM Mono', fontSize: '0.6rem', color: 'var(--muted)', letterSpacing: '0.1em' }}>
+              {p.categoria?.toUpperCase()}
+            </span>
           </div>
+        ) : (
+          <img
+            src={getImagen(p.id)}
+            alt={p.nombre}
+            onError={() => setImgError(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
         )}
+        <div style={{
+          position:      'absolute',
+          top:           '8px',
+          right:         '8px',
+          background:    'rgba(10,11,14,0.85)',
+          border:        `1px solid ${stockColor}`,
+          borderRadius:  '2px',
+          padding:       '2px 7px',
+          fontFamily:    'DM Mono, monospace',
+          fontSize:      '0.6rem',
+          color:         stockColor,
+        }}>
+          {p.stock} uds
+        </div>
+      </div>
+
+      {/* Info */}
+      <div style={{ padding: '12px 14px' }}>
+        <p style={{
+          fontFamily:      'DM Sans, sans-serif',
+          fontWeight:      600,
+          fontSize:        '0.82rem',
+          color:           'var(--text)',
+          margin:          '0 0 6px',
+          lineHeight:      1.3,
+          display:         '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow:        'hidden',
+        }}>
+          {p.nombre}
+        </p>
+        <p style={{
+          fontFamily:         'DM Mono, monospace',
+          fontSize:           '0.95rem',
+          color:              'var(--accent)',
+          fontWeight:         700,
+          margin:             0,
+          fontVariantNumeric: 'tabular-nums',
+        }}>
+          Q{parseFloat(p.precio).toLocaleString('es-GT', { minimumFractionDigits: 2 })}
+        </p>
       </div>
     </div>
   )
