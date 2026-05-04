@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 
 const LINKS = [
+  { to: '/dashboard', label: 'Dashboard' },
   { to: '/productos', label: 'Productos' },
   { to: '/ventas',    label: 'Ventas'    },
   { to: '/reportes',  label: 'Reportes'  },
