@@ -1,15 +1,22 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 
-const LINKS = [
+const LINKS_TODOS  = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/productos', label: 'Productos' },
-  { to: '/ventas',    label: 'Ventas'    },
-  { to: '/reportes',  label: 'Reportes'  },
 ]
+const LINKS_STAFF  = [
+  { to: '/ventas',   label: 'Ventas'   },
+  { to: '/reportes', label: 'Reportes' },
+]
+const ROLES_STAFF = ['admin', 'gerente', 'vendedor', 'cajero']
 
 export default function Navbar() {
   const navigate  = useNavigate()
   const username  = localStorage.getItem('username') || 'usuario'
+  const rol       = localStorage.getItem('rol') || ''
+  const links     = ROLES_STAFF.includes(rol)
+    ? [...LINKS_TODOS, ...LINKS_STAFF]
+    : LINKS_TODOS
 
   const logout = () => {
     localStorage.clear()
@@ -38,7 +45,7 @@ export default function Navbar() {
 
       {/* Navegación */}
       <div style={{ display: 'flex', height: '100%' }}>
-        {LINKS.map(({ to, label }) => (
+        {links.map(({ to, label }) => (
           <NavLink key={to} to={to} style={({ isActive }) => ({
             display:       'flex',
             alignItems:    'center',
