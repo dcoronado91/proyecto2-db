@@ -11,30 +11,40 @@ export default function Producto() {
   const rol       = localStorage.getItem('rol') || ''
   const esStaff   = ROLES_STAFF.includes(rol)
 
-  const [producto,  setProducto]  = useState(null)
-  const [loading,   setLoading]   = useState(true)
-  const [error,     setError]     = useState('')
-  const [imgError,  setImgError]  = useState(false)
+  const clienteId = parseInt(localStorage.getItem('cliente_id') || '0')
 
-  // Estado compra (solo clientes)
+  const [producto,     setProducto]     = useState(null)
+  const [primerEmpId,  setPrimerEmpId]  = useState(null)
+  const [loading,      setLoading]      = useState(true)
+  const [error,        setError]        = useState('')
+  const [imgError,     setImgError]     = useState(false)
+
   const [cantidad,   setCantidad]   = useState(1)
   const [comprando,  setComprando]  = useState(false)
   const [resultado,  setResultado]  = useState(null)
 
   useEffect(() => {
-    api.get(`/productos/${id}`)
-      .then(({ data }) => setProducto(data))
-      .catch(() => setError('Producto no encontrado'))
+    Promise.all([
+      api.get(`/productos/${id}`),
+      !esStaff ? api.get('/empleados') : Promise.resolve({ data: [] }),
+    ]).then(([prod, emps]) => {
+      setProducto(prod.data)
+      if (emps.data.length) setPrimerEmpId(emps.data[0].id)
+    }).catch(() => setError('Producto no encontrado'))
       .finally(() => setLoading(false))
   }, [id])
 
   const handleComprar = async () => {
+    if (!clienteId) {
+      setResultado({ ok: false, error: 'Tu cuenta no está vinculada a un cliente. Registrate con rol "cliente".' })
+      return
+    }
     setComprando(true)
     setResultado(null)
     try {
       const { data } = await api.post('/ventas', {
-        cliente_id:  1,
-        empleado_id: 1,
+        cliente_id:  clienteId,
+        empleado_id: primerEmpId,
         items: [{ producto_id: parseInt(id), cantidad }],
       })
       setResultado({ ok: true, venta_id: data.venta_id, total: data.total })

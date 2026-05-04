@@ -14,9 +14,10 @@ export default function Login() {
     setLoading(true)
     try {
       const { data } = await api.post('/auth/login', form)
-      localStorage.setItem('token',    data.token)
-      localStorage.setItem('username', data.username)
-      localStorage.setItem('rol',      data.rol)
+      localStorage.setItem('token',      data.token)
+      localStorage.setItem('username',  data.username)
+      localStorage.setItem('rol',       data.rol)
+      localStorage.setItem('cliente_id', data.cliente_id ?? '')
       navigate('/productos')
     } catch (err) {
       setError(err.response?.data?.error || 'Credenciales incorrectas')
