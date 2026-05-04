@@ -1,7 +1,9 @@
-**Nombre: Derek Friedhelm Coronado Chilin**
-**Carnet: 24732**
-**Curso: CC3088 - Bases de Datos 1**
-**Seccion: 10**
+## Información del estudiante
+
+- **Nombre:** Derek Friedhelm Coronado Chilin  
+- **Carnet:** 24732  
+- **Curso:** CC3088 - Bases de Datos 1  
+- **Sección:** 10  
 
 # Tienda Tech — Sistema de Gestión
 
