@@ -39,40 +39,73 @@ export default function Login() {
   }
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}
-      className="flex items-center justify-center relative overflow-hidden">
+    <div style={{
+      background:      'var(--bg)',
+      minHeight:       '100vh',
+      display:         'flex',
+      alignItems:      'center',
+      justifyContent:  'center',
+      position:        'relative',
+      overflow:        'hidden',
+    }}>
 
       {/* Grid de fondo */}
-      <div className="absolute inset-0" style={{
+      <div style={{
+        position:        'absolute',
+        inset:           0,
         backgroundImage:
           'linear-gradient(var(--border) 1px, transparent 1px),' +
           'linear-gradient(90deg, var(--border) 1px, transparent 1px)',
-        backgroundSize: '48px 48px',
-        opacity: 0.4,
+        backgroundSize:  '48px 48px',
+        opacity:         0.4,
+        pointerEvents:   'none',
       }} />
 
       {/* Glow central */}
-      <div className="absolute" style={{
-        width: '500px', height: '500px',
-        background: 'radial-gradient(circle, rgba(200,255,71,0.04) 0%, transparent 70%)',
-        top: '50%', left: '50%',
-        transform: 'translate(-50%, -50%)',
+      <div style={{
+        position:      'absolute',
+        width:         '500px',
+        height:        '500px',
+        background:    'radial-gradient(circle, rgba(200,255,71,0.04) 0%, transparent 70%)',
+        top:           '50%',
+        left:          '50%',
+        transform:     'translate(-50%, -50%)',
         pointerEvents: 'none',
       }} />
 
-      <div className="relative z-10 w-full max-w-sm px-6">
+      <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '380px', padding: '0 24px' }}>
 
         {/* Logo */}
-        <div className="mb-10 text-center">
-          <p className="font-display font-bold text-6xl leading-none"
-            style={{ color: 'var(--accent)', letterSpacing: '-2px' }}>
+        <div style={{ marginBottom: '40px', textAlign: 'center' }}>
+          <p style={{
+            fontFamily:   'Syne, sans-serif',
+            fontWeight:   800,
+            fontSize:     '3.5rem',
+            lineHeight:   1,
+            color:        'var(--accent)',
+            letterSpacing:'-2px',
+            margin:       0,
+          }}>
             TIENDA
           </p>
-          <p className="font-display font-bold text-6xl leading-none"
-            style={{ color: 'var(--text)', letterSpacing: '-2px' }}>
+          <p style={{
+            fontFamily:   'Syne, sans-serif',
+            fontWeight:   800,
+            fontSize:     '3.5rem',
+            lineHeight:   1,
+            color:        'var(--text)',
+            letterSpacing:'-2px',
+            margin:       0,
+          }}>
             TECH
           </p>
-          <p className="font-data text-xs mt-4" style={{ color: 'var(--muted)', letterSpacing: '0.2em' }}>
+          <p style={{
+            fontFamily:   'DM Mono, monospace',
+            fontSize:     '0.7rem',
+            marginTop:    '16px',
+            color:        'var(--muted)',
+            letterSpacing:'0.2em',
+          }}>
             SISTEMA DE GESTIÓN — v1.0
           </p>
         </div>
@@ -84,11 +117,18 @@ export default function Login() {
           borderRadius: '2px',
           padding:      '32px',
         }}>
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
             <div>
-              <label className="font-data text-xs uppercase block mb-2"
-                style={{ color: 'var(--muted)', letterSpacing: '0.15em' }}>
+              <label style={{
+                display:       'block',
+                fontFamily:    'DM Mono, monospace',
+                fontSize:      '0.65rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color:         'var(--muted)',
+                marginBottom:  '8px',
+              }}>
                 Usuario
               </label>
               <input
@@ -103,8 +143,15 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="font-data text-xs uppercase block mb-2"
-                style={{ color: 'var(--muted)', letterSpacing: '0.15em' }}>
+              <label style={{
+                display:       'block',
+                fontFamily:    'DM Mono, monospace',
+                fontSize:      '0.65rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color:         'var(--muted)',
+                marginBottom:  '8px',
+              }}>
                 Contraseña
               </label>
               <input
@@ -136,19 +183,19 @@ export default function Login() {
               type="submit"
               disabled={loading}
               style={{
-                background:   loading ? 'var(--border)' : 'var(--accent)',
-                color:        '#0a0b0e',
-                border:       'none',
-                borderRadius: '2px',
-                fontFamily:   'Syne, sans-serif',
-                fontWeight:   800,
-                fontSize:     '0.8rem',
-                letterSpacing:'0.15em',
-                width:        '100%',
-                padding:      '14px',
-                cursor:       loading ? 'not-allowed' : 'pointer',
-                transition:   'opacity 0.2s',
-                opacity:      loading ? 0.6 : 1,
+                background:    loading ? 'var(--border)' : 'var(--accent)',
+                color:         '#0a0b0e',
+                border:        'none',
+                borderRadius:  '2px',
+                fontFamily:    'Syne, sans-serif',
+                fontWeight:    800,
+                fontSize:      '0.8rem',
+                letterSpacing: '0.15em',
+                width:         '100%',
+                padding:       '14px',
+                cursor:        loading ? 'not-allowed' : 'pointer',
+                transition:    'opacity 0.2s',
+                opacity:       loading ? 0.6 : 1,
               }}>
               {loading ? 'AUTENTICANDO...' : 'INGRESAR →'}
             </button>

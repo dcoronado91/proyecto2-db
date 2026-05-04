@@ -23,11 +23,12 @@ function StatCard({ label, value, sub, accent }) {
         {label}
       </span>
       <span style={{
-        fontFamily: 'Syne, sans-serif',
-        fontWeight: 800,
-        fontSize:   '2.2rem',
-        color:      accent || 'var(--text)',
-        lineHeight: 1,
+        fontFamily:         'DM Mono, monospace',
+        fontWeight:         700,
+        fontSize:           '2rem',
+        color:              accent || 'var(--text)',
+        lineHeight:         1,
+        fontVariantNumeric: 'tabular-nums',
       }}>
         {value}
       </span>
