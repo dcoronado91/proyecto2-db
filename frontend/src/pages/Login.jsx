@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import api from '../api/axios'
 
 export default function Login() {
@@ -202,6 +202,15 @@ export default function Login() {
             </button>
           </form>
         </div>
+
+        {/* Link al registro */}
+        <p style={{ textAlign: 'center', marginTop: '20px', fontFamily: 'DM Mono, monospace', fontSize: '0.72rem', color: 'var(--muted)' }}>
+          ¿No tienes cuenta?{' '}
+          <Link to="/register" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+            Crear cuenta
+          </Link>
+        </p>
+
       </div>
     </div>
   )

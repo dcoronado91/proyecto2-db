@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, Link, useNavigate } from 'react-router-dom'
 
 const LINKS_TODOS  = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -38,10 +38,12 @@ export default function Navbar() {
     }}>
 
       {/* Logo */}
-      <span className="font-display font-bold text-lg" style={{ letterSpacing: '-0.5px' }}>
-        <span style={{ color: 'var(--accent)' }}>TIENDA</span>
-        <span style={{ color: 'var(--text)' }}> TECH</span>
-      </span>
+      <Link to="/productos" style={{ textDecoration: 'none' }}>
+        <span className="font-display font-bold text-lg" style={{ letterSpacing: '-0.5px' }}>
+          <span style={{ color: 'var(--accent)' }}>TIENDA</span>
+          <span style={{ color: 'var(--text)' }}> TECH</span>
+        </span>
+      </Link>
 
       {/* Navegación */}
       <div style={{ display: 'flex', height: '100%' }}>

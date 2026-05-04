@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar    from './components/Navbar'
 import Login     from './pages/Login'
+import Register  from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Productos from './pages/Productos'
 import Ventas    from './pages/Ventas'
@@ -43,7 +44,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login"    element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/productos" element={
           <PrivateRoute><Layout><Productos /></Layout></PrivateRoute>
         } />
