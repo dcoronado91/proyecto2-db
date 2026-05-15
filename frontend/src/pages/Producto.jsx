@@ -5,31 +5,40 @@ import { getImagen } from '../data/imagenes'
 import { useAuth } from '../context/AuthContext'
 import { ROLES_STAFF } from '../constants/roles'
 
+const selectStyle = {
+  background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)',
+  borderRadius: '2px', fontFamily: 'DM Mono, monospace', fontSize: '0.8rem',
+  padding: '9px 12px', outline: 'none', width: '100%', cursor: 'pointer',
+}
+
 export default function Producto() {
-  const { id }    = useParams()
-  const navigate  = useNavigate()
-  const { auth }  = useAuth()
-  const esStaff   = ROLES_STAFF.includes(auth.rol)
+  const { id }   = useParams()
+  const navigate = useNavigate()
+  const { auth } = useAuth()
+  const esStaff  = ROLES_STAFF.includes(auth.rol)
   const clienteId = parseInt(auth.cliente_id || '0')
 
-  const [producto,     setProducto]     = useState(null)
-  const [primerEmpId,  setPrimerEmpId]  = useState(null)
-  const [loading,      setLoading]      = useState(true)
-  const [error,        setError]        = useState('')
-  const [imgError,     setImgError]     = useState(false)
+  const [producto,   setProducto]   = useState(null)
+  const [empleados,  setEmpleados]  = useState([])
+  const [empleadoId, setEmpleadoId] = useState('')
+  const [loading,    setLoading]    = useState(true)
+  const [error,      setError]      = useState('')
+  const [imgError,   setImgError]   = useState(false)
 
-  const [cantidad,   setCantidad]   = useState(1)
-  const [comprando,  setComprando]  = useState(false)
-  const [resultado,  setResultado]  = useState(null)
+  const [cantidad,  setCantidad]  = useState(1)
+  const [comprando, setComprando] = useState(false)
+  const [resultado, setResultado] = useState(null)
 
   useEffect(() => {
-    Promise.all([
-      api.get(`/productos/${id}`),
-      !esStaff ? api.get('/empleados') : Promise.resolve({ data: [] }),
-    ]).then(([prod, emps]) => {
-      setProducto(prod.data)
-      if (emps.data.length) setPrimerEmpId(emps.data[0].id)
-    }).catch(() => setError('Producto no encontrado'))
+    const promesas = [api.get(`/productos/${id}`)]
+    if (!esStaff) promesas.push(api.get('/empleados'))
+
+    Promise.all(promesas)
+      .then(([prod, emps]) => {
+        setProducto(prod.data)
+        if (emps) setEmpleados(emps.data)
+      })
+      .catch(() => setError('Producto no encontrado'))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -38,19 +47,22 @@ export default function Producto() {
       setResultado({ ok: false, error: 'Tu cuenta no está vinculada a un cliente. Regístrate con rol "cliente".' })
       return
     }
+    if (!empleadoId) {
+      setResultado({ ok: false, error: 'Selecciona el vendedor que te está atendiendo.' })
+      return
+    }
     setComprando(true)
     setResultado(null)
     try {
       const { data } = await api.post('/ventas', {
         cliente_id:  clienteId,
-        empleado_id: primerEmpId,
+        empleado_id: parseInt(empleadoId),
         items: [{ producto_id: parseInt(id), cantidad }],
       })
       setResultado({ ok: true, venta_id: data.venta_id, total: data.total })
       setProducto(prev => ({ ...prev, stock: prev.stock - cantidad }))
     } catch (err) {
-      const msg = err.response?.data?.error || 'Error al procesar'
-      setResultado({ ok: false, error: msg })
+      setResultado({ ok: false, error: err.response?.data?.error || 'Error al procesar' })
     } finally {
       setComprando(false)
     }
@@ -94,26 +106,18 @@ export default function Producto() {
 
         {/* Imagen */}
         <div style={{
-          borderRadius: '2px',
-          overflow:     'hidden',
-          border:       '1px solid var(--border)',
-          background:   'var(--surface-2)',
-          aspectRatio:  '4/3',
+          borderRadius: '2px', overflow: 'hidden',
+          border: '1px solid var(--border)', background: 'var(--surface-2)', aspectRatio: '4/3',
         }}>
           {imgError || !getImagen(parseInt(id)) ? (
-            <div style={{
-              width: '100%', height: '100%', minHeight: '320px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'var(--surface-2)',
-            }}>
+            <div style={{ width: '100%', height: '100%', minHeight: '320px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-2)' }}>
               <span style={{ fontFamily: 'DM Mono', fontSize: '0.7rem', color: 'var(--muted)', letterSpacing: '0.12em' }}>
                 {producto.categoria?.toUpperCase()}
               </span>
             </div>
           ) : (
             <img
-              src={getImagen(parseInt(id))}
-              alt={producto.nombre}
+              src={getImagen(parseInt(id))} alt={producto.nombre}
               onError={() => setImgError(true)}
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
@@ -123,37 +127,26 @@ export default function Producto() {
         {/* Info */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-          {/* Categoría */}
           <span style={{
-            fontFamily:    'DM Mono, monospace',
-            fontSize:      '0.65rem',
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color:         'var(--accent)',
-            border:        '1px solid rgba(200,255,71,0.3)',
-            borderRadius:  '2px',
-            padding:       '3px 10px',
-            alignSelf:     'flex-start',
+            fontFamily: 'DM Mono, monospace', fontSize: '0.65rem', letterSpacing: '0.18em',
+            textTransform: 'uppercase', color: 'var(--accent)', border: '1px solid rgba(200,255,71,0.3)',
+            borderRadius: '2px', padding: '3px 10px', alignSelf: 'flex-start',
           }}>
             {producto.categoria}
           </span>
 
-          {/* Nombre */}
           <h1 className="font-display font-bold" style={{ fontSize: '1.75rem', color: 'var(--text)', margin: 0, lineHeight: 1.2 }}>
             {producto.nombre}
           </h1>
 
-          {/* Descripción */}
           <p style={{ fontFamily: 'DM Mono, monospace', fontSize: '0.82rem', color: 'var(--muted)', margin: 0, lineHeight: 1.7 }}>
             {producto.descripcion}
           </p>
 
-          {/* Proveedor */}
           <p style={{ fontFamily: 'DM Mono, monospace', fontSize: '0.7rem', color: 'var(--muted)', margin: 0 }}>
             Proveedor: <span style={{ color: 'var(--text)' }}>{producto.proveedor}</span>
           </p>
 
-          {/* Precio + Stock */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
             <span style={{ fontFamily: 'DM Mono, monospace', fontWeight: 700, fontSize: '1.8rem', color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}>
               Q{parseFloat(producto.precio).toLocaleString('es-GT', { minimumFractionDigits: 2 })}
@@ -170,16 +163,9 @@ export default function Producto() {
                 <button
                   onClick={() => navigate('/ventas')}
                   style={{
-                    background:    'var(--accent)',
-                    color:         '#0a0b0e',
-                    border:        'none',
-                    borderRadius:  '2px',
-                    fontFamily:    'Syne, sans-serif',
-                    fontWeight:    800,
-                    fontSize:      '0.8rem',
-                    letterSpacing: '0.15em',
-                    padding:       '14px',
-                    cursor:        'pointer',
+                    background: 'var(--accent)', color: '#0a0b0e', border: 'none', borderRadius: '2px',
+                    fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.8rem',
+                    letterSpacing: '0.15em', padding: '14px', cursor: 'pointer',
                   }}
                 >
                   REGISTRAR VENTA →
@@ -187,7 +173,36 @@ export default function Producto() {
               ) : (
                 <>
                   {!resultado ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+                      {/* Selector de vendedor */}
+                      <div>
+                        <label style={{
+                          display: 'block', fontFamily: 'DM Mono, monospace', fontSize: '0.62rem',
+                          letterSpacing: '0.15em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '8px',
+                        }}>
+                          Vendedor que te atiende
+                        </label>
+                        <select
+                          value={empleadoId}
+                          onChange={e => setEmpleadoId(e.target.value)}
+                          style={{
+                            ...selectStyle,
+                            borderColor: resultado?.error && !empleadoId ? 'var(--danger)' : 'var(--border)',
+                          }}
+                          onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+                          onBlur={e  => e.target.style.borderColor = 'var(--border)'}
+                        >
+                          <option value="">— seleccionar vendedor —</option>
+                          {empleados.map(emp => (
+                            <option key={emp.id} value={emp.id}>
+                              {emp.nombre} · {emp.puesto}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Selector de cantidad */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <span style={{ fontFamily: 'DM Mono', fontSize: '0.65rem', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>
                           Cantidad
@@ -209,21 +224,16 @@ export default function Producto() {
                           = Q{(parseFloat(producto.precio) * cantidad).toLocaleString('es-GT', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
+
                       <button
                         onClick={handleComprar}
                         disabled={comprando}
                         style={{
-                          background:    comprando ? 'var(--border)' : 'var(--accent)',
-                          color:         '#0a0b0e',
-                          border:        'none',
-                          borderRadius:  '2px',
-                          fontFamily:    'Syne, sans-serif',
-                          fontWeight:    800,
-                          fontSize:      '0.8rem',
-                          letterSpacing: '0.15em',
-                          padding:       '14px',
-                          cursor:        comprando ? 'not-allowed' : 'pointer',
-                          opacity:       comprando ? 0.6 : 1,
+                          background: comprando ? 'var(--border)' : 'var(--accent)',
+                          color: '#0a0b0e', border: 'none', borderRadius: '2px',
+                          fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.8rem',
+                          letterSpacing: '0.15em', padding: '14px',
+                          cursor: comprando ? 'not-allowed' : 'pointer', opacity: comprando ? 0.6 : 1,
                         }}
                       >
                         {comprando ? 'PROCESANDO...' : 'COMPRAR AHORA →'}
@@ -231,10 +241,9 @@ export default function Producto() {
                     </div>
                   ) : (
                     <div style={{
-                      padding:      '16px 20px',
-                      borderRadius: '2px',
-                      border:       `1px solid ${resultado.ok ? 'rgba(6,214,160,0.35)' : 'rgba(255,77,109,0.35)'}`,
-                      background:   resultado.ok ? 'rgba(6,214,160,0.05)' : 'rgba(255,77,109,0.05)',
+                      padding: '16px 20px', borderRadius: '2px',
+                      border: `1px solid ${resultado.ok ? 'rgba(6,214,160,0.35)' : 'rgba(255,77,109,0.35)'}`,
+                      background: resultado.ok ? 'rgba(6,214,160,0.05)' : 'rgba(255,77,109,0.05)',
                     }}>
                       {resultado.ok ? (
                         <>
@@ -253,6 +262,12 @@ export default function Producto() {
                           <p style={{ fontFamily: 'DM Mono', fontSize: '0.8rem', color: 'var(--danger)', margin: 0 }}>
                             {resultado.error}
                           </p>
+                          <button
+                            onClick={() => setResultado(null)}
+                            style={{ marginTop: '10px', background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: '2px', fontFamily: 'DM Mono', fontSize: '0.65rem', padding: '5px 12px', cursor: 'pointer' }}
+                          >
+                            Intentar de nuevo
+                          </button>
                         </>
                       )}
                     </div>

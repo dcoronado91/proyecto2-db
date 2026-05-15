@@ -39,6 +39,14 @@ const StaffRoute = ({ children }) => {
   return children
 }
 
+const HomeRedirect = () => {
+  const { auth } = useAuth()
+  if (!auth.token) return <Navigate to="/login" replace />
+  return ROLES_STAFF.includes(auth.rol)
+    ? <Navigate to="/dashboard" replace />
+    : <Navigate to="/productos" replace />
+}
+
 const Layout = ({ children }) => (
   <>
     <Navbar />
@@ -62,7 +70,7 @@ export default function App() {
           <StaffRoute><Layout><Reportes /></Layout></StaffRoute>
         } />
         <Route path="/dashboard" element={
-          <PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>
+          <StaffRoute><Layout><Dashboard /></Layout></StaffRoute>
         } />
         <Route path="/producto/:id" element={
           <PrivateRoute><Layout><Producto /></Layout></PrivateRoute>
@@ -76,7 +84,7 @@ export default function App() {
         <Route path="/sin-acceso" element={
           <PrivateRoute><Layout><SinAcceso /></Layout></PrivateRoute>
         } />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<HomeRedirect />} />
       </Routes>
     </BrowserRouter>
   )
