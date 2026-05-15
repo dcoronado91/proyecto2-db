@@ -7,6 +7,7 @@ import Productos from './pages/Productos'
 import Ventas    from './pages/Ventas'
 import Reportes  from './pages/Reportes'
 import Producto  from './pages/Producto'
+import { useAuth } from './context/AuthContext'
 
 const SinAcceso = () => (
   <div style={{ padding: '80px 32px', textAlign: 'center' }}>
@@ -22,14 +23,17 @@ const SinAcceso = () => (
   </div>
 )
 
-const ROLES_STAFF = ['admin', 'gerente', 'vendedor', 'cajero']
+export const ROLES_STAFF = ['admin', 'gerente', 'vendedor', 'cajero']
 
-const PrivateRoute = ({ children }) =>
-  localStorage.getItem('token') ? children : <Navigate to="/login" replace />
+const PrivateRoute = ({ children }) => {
+  const { auth } = useAuth()
+  return auth.token ? children : <Navigate to="/login" replace />
+}
 
 const StaffRoute = ({ children }) => {
-  if (!localStorage.getItem('token')) return <Navigate to="/login" replace />
-  if (!ROLES_STAFF.includes(localStorage.getItem('rol'))) return <Navigate to="/sin-acceso" replace />
+  const { auth } = useAuth()
+  if (!auth.token) return <Navigate to="/login" replace />
+  if (!ROLES_STAFF.includes(auth.rol)) return <Navigate to="/sin-acceso" replace />
   return children
 }
 

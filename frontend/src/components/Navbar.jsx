@@ -1,4 +1,6 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { ROLES_STAFF } from '../App'
 
 const LINKS_TODOS  = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -8,18 +10,16 @@ const LINKS_STAFF  = [
   { to: '/ventas',   label: 'Ventas'   },
   { to: '/reportes', label: 'Reportes' },
 ]
-const ROLES_STAFF = ['admin', 'gerente', 'vendedor', 'cajero']
 
 export default function Navbar() {
-  const navigate  = useNavigate()
-  const username  = localStorage.getItem('username') || 'usuario'
-  const rol       = localStorage.getItem('rol') || ''
-  const links     = ROLES_STAFF.includes(rol)
+  const navigate       = useNavigate()
+  const { auth, logout } = useAuth()
+  const links = ROLES_STAFF.includes(auth.rol)
     ? [...LINKS_TODOS, ...LINKS_STAFF]
     : LINKS_TODOS
 
-  const logout = () => {
-    localStorage.clear()
+  const handleLogout = () => {
+    logout()
     navigate('/login')
   }
 
@@ -68,9 +68,9 @@ export default function Navbar() {
       {/* Usuario */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <span className="font-data text-xs" style={{ color: 'var(--muted)' }}>
-          {username}
+          {auth.username}
         </span>
-        <button onClick={logout} style={{
+        <button onClick={handleLogout} style={{
           background:    'transparent',
           border:        '1px solid var(--border)',
           color:         'var(--muted)',

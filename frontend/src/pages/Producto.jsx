@@ -2,16 +2,15 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import { getImagen } from '../data/imagenes'
-
-const ROLES_STAFF = ['admin', 'gerente', 'vendedor', 'cajero']
+import { useAuth } from '../context/AuthContext'
+import { ROLES_STAFF } from '../App'
 
 export default function Producto() {
   const { id }    = useParams()
   const navigate  = useNavigate()
-  const rol       = localStorage.getItem('rol') || ''
-  const esStaff   = ROLES_STAFF.includes(rol)
-
-  const clienteId = parseInt(localStorage.getItem('cliente_id') || '0')
+  const { auth }  = useAuth()
+  const esStaff   = ROLES_STAFF.includes(auth.rol)
+  const clienteId = parseInt(auth.cliente_id || '0')
 
   const [producto,     setProducto]     = useState(null)
   const [primerEmpId,  setPrimerEmpId]  = useState(null)
@@ -36,7 +35,7 @@ export default function Producto() {
 
   const handleComprar = async () => {
     if (!clienteId) {
-      setResultado({ ok: false, error: 'Tu cuenta no está vinculada a un cliente. Registrate con rol "cliente".' })
+      setResultado({ ok: false, error: 'Tu cuenta no está vinculada a un cliente. Regístrate con rol "cliente".' })
       return
     }
     setComprando(true)
@@ -187,7 +186,6 @@ export default function Producto() {
                 </button>
               ) : (
                 <>
-                  {/* Panel de compra para clientes */}
                   {!resultado ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

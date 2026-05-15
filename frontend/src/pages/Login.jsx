@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import api from '../api/axios'
+import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
   const [form,    setForm]    = useState({ username: '', password: '' })
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -14,10 +16,7 @@ export default function Login() {
     setLoading(true)
     try {
       const { data } = await api.post('/auth/login', form)
-      localStorage.setItem('token',      data.token)
-      localStorage.setItem('username',  data.username)
-      localStorage.setItem('rol',       data.rol)
-      localStorage.setItem('cliente_id', data.cliente_id ?? '')
+      login(data)
       navigate('/productos')
     } catch (err) {
       setError(err.response?.data?.error || 'Credenciales incorrectas')

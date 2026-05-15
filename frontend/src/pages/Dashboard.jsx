@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
+import { useAuth } from '../context/AuthContext'
 
 function StatCard({ label, value, sub, accent }) {
   return (
@@ -43,7 +44,8 @@ function StatCard({ label, value, sub, accent }) {
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const username = localStorage.getItem('username') || 'usuario'
+  const { auth } = useAuth()
+  const username = auth.username || 'usuario'
 
   const [ventas,    setVentas]    = useState([])
   const [productos, setProductos] = useState([])
