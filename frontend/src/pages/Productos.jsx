@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import { getImagen } from '../data/imagenes'
@@ -17,9 +17,12 @@ export default function Productos() {
       .finally(() => setLoading(false))
   }, [])
 
-  const filtrados = productos.filter(p =>
-    p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-    p.categoria.toLowerCase().includes(busqueda.toLowerCase())
+  const filtrados = useMemo(
+    () => productos.filter(p =>
+      p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+      p.categoria.toLowerCase().includes(busqueda.toLowerCase())
+    ),
+    [productos, busqueda]
   )
 
   if (loading) return (
