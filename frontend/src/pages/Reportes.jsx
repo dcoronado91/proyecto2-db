@@ -2,24 +2,32 @@ import { useEffect, useState } from 'react'
 import api from '../api/axios'
 
 const thStyle = {
-  padding:       '10px 16px',
-  fontFamily:    'DM Mono, monospace',
-  fontSize:      '0.62rem',
-  letterSpacing: '0.12em',
-  color:         'var(--muted)',
-  textTransform: 'uppercase',
-  fontWeight:    500,
-  textAlign:     'left',
+  padding: '10px 16px', fontFamily: 'DM Mono, monospace', fontSize: '0.62rem',
+  letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase',
+  fontWeight: 500, textAlign: 'left',
 }
-
 const tdStyle = {
-  padding:    '10px 16px',
-  fontFamily: 'DM Mono, monospace',
-  fontSize:   '0.78rem',
-  color:      'var(--muted)',
+  padding: '10px 16px', fontFamily: 'DM Mono, monospace', fontSize: '0.78rem', color: 'var(--muted)',
 }
 
-function ReportePanel({ titulo, tag, children, loading }) {
+function exportarCSV(datos, nombre) {
+  if (!datos.length) return
+  const encabezados = Object.keys(datos[0]).join(',')
+  const filas = datos.map(fila =>
+    Object.values(fila).map(v =>
+      typeof v === 'string' && v.includes(',') ? `"${v}"` : v
+    ).join(',')
+  ).join('\n')
+  const blob = new Blob([`${encabezados}\n${filas}`], { type: 'text/csv;charset=utf-8;' })
+  const url  = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href     = url
+  link.download = `${nombre}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+function ReportePanel({ titulo, tag, datos, nombreCSV, children, loading }) {
   return (
     <div style={{ marginBottom: '48px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
@@ -27,18 +35,31 @@ function ReportePanel({ titulo, tag, children, loading }) {
           {titulo}
         </h3>
         <span style={{
-          fontFamily:    'DM Mono, monospace',
-          fontSize:      '0.6rem',
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase',
-          color:         'var(--accent)',
-          border:        '1px solid rgba(200,255,71,0.3)',
-          borderRadius:  '2px',
-          padding:       '3px 8px',
+          fontFamily: 'DM Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.15em',
+          textTransform: 'uppercase', color: 'var(--accent)',
+          border: '1px solid rgba(200,255,71,0.3)', borderRadius: '2px', padding: '3px 8px',
         }}>
           {tag}
         </span>
+
+        {!loading && datos.length > 0 && (
+          <button
+            onClick={() => exportarCSV(datos, nombreCSV)}
+            style={{
+              marginLeft: 'auto', background: 'none',
+              border: '1px solid var(--border)', color: 'var(--muted)',
+              borderRadius: '2px', fontFamily: 'DM Mono, monospace',
+              fontSize: '0.62rem', letterSpacing: '0.12em', textTransform: 'uppercase',
+              padding: '4px 12px', cursor: 'pointer', transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.target.style.borderColor = 'var(--accent)'; e.target.style.color = 'var(--accent)' }}
+            onMouseLeave={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.color = 'var(--muted)' }}
+          >
+            ↓ CSV
+          </button>
+        )}
       </div>
+
       <div style={{ border: '1px solid var(--border)', borderRadius: '2px', overflow: 'hidden' }}>
         {loading
           ? <div style={{ padding: '24px 16px', fontFamily: 'DM Mono', fontSize: '0.8rem', color: 'var(--muted)' }}>Cargando...</div>
@@ -50,11 +71,11 @@ function ReportePanel({ titulo, tag, children, loading }) {
 }
 
 export default function Reportes() {
-  const [stockBajo,     setStockBajo]     = useState([])
+  const [stockBajo,       setStockBajo]       = useState([])
   const [mejoresClientes, setMejoresClientes] = useState([])
-  const [rendimiento,   setRendimiento]   = useState([])
-  const [masVendidos,   setMasVendidos]   = useState([])
-  const [loading,       setLoading]       = useState(true)
+  const [rendimiento,     setRendimiento]     = useState([])
+  const [masVendidos,     setMasVendidos]     = useState([])
+  const [loading,         setLoading]         = useState(true)
 
   useEffect(() => {
     Promise.all([
@@ -77,8 +98,8 @@ export default function Reportes() {
         Reportes
       </h2>
 
-      {/* 1. Stock bajo — SUBQUERY */}
-      <ReportePanel titulo="Stock Bajo" tag="Subconsulta" loading={loading}>
+      {/* 1. Stock bajo */}
+      <ReportePanel titulo="Stock Bajo" tag="Subconsulta" datos={stockBajo} nombreCSV="stock-bajo" loading={loading}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
           <thead>
             <tr style={{ background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
@@ -103,15 +124,15 @@ export default function Reportes() {
             ))}
           </tbody>
         </table>
-        {stockBajo.length === 0 && !loading && (
+        {stockBajo.length === 0 && (
           <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)', fontFamily: 'DM Mono', fontSize: '0.8rem' }}>
             Sin resultados
           </div>
         )}
       </ReportePanel>
 
-      {/* 2. Mejores clientes — SUBQUERY */}
-      <ReportePanel titulo="Mejores Clientes" tag="Subconsulta" loading={loading}>
+      {/* 2. Mejores clientes */}
+      <ReportePanel titulo="Mejores Clientes" tag="Subconsulta" datos={mejoresClientes} nombreCSV="mejores-clientes" loading={loading}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
           <thead>
             <tr style={{ background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
@@ -132,15 +153,15 @@ export default function Reportes() {
             ))}
           </tbody>
         </table>
-        {mejoresClientes.length === 0 && !loading && (
+        {mejoresClientes.length === 0 && (
           <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)', fontFamily: 'DM Mono', fontSize: '0.8rem' }}>
             Sin resultados — se necesitan más ventas registradas
           </div>
         )}
       </ReportePanel>
 
-      {/* 3. Rendimiento empleados — GROUP BY + HAVING */}
-      <ReportePanel titulo="Rendimiento de Empleados" tag="GROUP BY · HAVING" loading={loading}>
+      {/* 3. Rendimiento empleados */}
+      <ReportePanel titulo="Rendimiento de Empleados" tag="GROUP BY · HAVING" datos={rendimiento} nombreCSV="rendimiento-empleados" loading={loading}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
           <thead>
             <tr style={{ background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
@@ -163,15 +184,15 @@ export default function Reportes() {
             ))}
           </tbody>
         </table>
-        {rendimiento.length === 0 && !loading && (
+        {rendimiento.length === 0 && (
           <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)', fontFamily: 'DM Mono', fontSize: '0.8rem' }}>
             Sin empleados con ventas &gt; Q5,000.00
           </div>
         )}
       </ReportePanel>
 
-      {/* 4. Productos más vendidos — CTE */}
-      <ReportePanel titulo="Productos Más Vendidos" tag="CTE" loading={loading}>
+      {/* 4. Productos más vendidos */}
+      <ReportePanel titulo="Productos Más Vendidos" tag="CTE" datos={masVendidos} nombreCSV="productos-mas-vendidos" loading={loading}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
           <thead>
             <tr style={{ background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
@@ -194,7 +215,7 @@ export default function Reportes() {
             ))}
           </tbody>
         </table>
-        {masVendidos.length === 0 && !loading && (
+        {masVendidos.length === 0 && (
           <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)', fontFamily: 'DM Mono', fontSize: '0.8rem' }}>
             Sin ventas registradas aún
           </div>
