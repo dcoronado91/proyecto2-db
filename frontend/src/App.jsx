@@ -6,7 +6,9 @@ import Dashboard from './pages/Dashboard'
 import Productos from './pages/Productos'
 import Ventas    from './pages/Ventas'
 import Reportes  from './pages/Reportes'
-import Producto  from './pages/Producto'
+import Producto       from './pages/Producto'
+import AdminProductos  from './pages/AdminProductos'
+import AdminClientes   from './pages/AdminClientes'
 import { useAuth } from './context/AuthContext'
 import { ROLES_STAFF } from './constants/roles'
 
@@ -64,6 +66,12 @@ export default function App() {
         } />
         <Route path="/producto/:id" element={
           <PrivateRoute><Layout><Producto /></Layout></PrivateRoute>
+        } />
+        <Route path="/admin/productos" element={
+          <StaffRoute><Layout><AdminProductos /></Layout></StaffRoute>
+        } />
+        <Route path="/admin/clientes" element={
+          <StaffRoute><Layout><AdminClientes /></Layout></StaffRoute>
         } />
         <Route path="/sin-acceso" element={
           <PrivateRoute><Layout><SinAcceso /></Layout></PrivateRoute>

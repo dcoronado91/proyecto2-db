@@ -7,8 +7,10 @@ const LINKS_TODOS  = [
   { to: '/productos', label: 'Productos' },
 ]
 const LINKS_STAFF  = [
-  { to: '/ventas',   label: 'Ventas'   },
-  { to: '/reportes', label: 'Reportes' },
+  { to: '/ventas',           label: 'Ventas'    },
+  { to: '/reportes',         label: 'Reportes'  },
+  { to: '/admin/productos',  label: 'Inventario'      },
+  { to: '/admin/clientes',   label: 'Clientes'  },
 ]
 
 export default function Navbar() {
