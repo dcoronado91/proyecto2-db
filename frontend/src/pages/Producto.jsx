@@ -102,7 +102,7 @@ export default function Producto() {
       </div>
 
       {/* Layout principal */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'start' }}>
+      <div className="r-grid-2col">
 
         {/* Imagen */}
         <div style={{

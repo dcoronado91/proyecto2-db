@@ -85,7 +85,7 @@ export default function Dashboard() {
         <p className="font-data text-sm" style={{ color: 'var(--muted)' }}>Cargando...</p>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '40px' }}>
+          <div className="r-grid-stats">
             <StatCard
               label="Total Ventas"
               value={ventas.length}
@@ -112,7 +112,7 @@ export default function Dashboard() {
           </div>
 
           {/* Dos columnas: ventas recientes + accesos rápidos */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '32px', alignItems: 'start' }}>
+          <div className="r-grid-dashboard">
 
             {/* Ventas recientes */}
             <div>

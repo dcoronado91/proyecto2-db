@@ -3,14 +3,14 @@ import { useAuth } from '../context/AuthContext'
 import { ROLES_STAFF } from '../constants/roles'
 
 const LINKS_TODOS  = [
-  { to: '/dashboard', label: 'Dashboard' },
   { to: '/productos', label: 'Productos' },
 ]
 const LINKS_STAFF  = [
-  { to: '/ventas',           label: 'Ventas'    },
-  { to: '/reportes',         label: 'Reportes'  },
-  { to: '/admin/productos',  label: 'Inventario'      },
-  { to: '/admin/clientes',   label: 'Clientes'  },
+  { to: '/dashboard',        label: 'Dashboard'  },
+  { to: '/ventas',           label: 'Ventas'     },
+  { to: '/reportes',         label: 'Reportes'   },
+  { to: '/admin/productos',  label: 'Inventario' },
+  { to: '/admin/clientes',   label: 'Clientes'   },
 ]
 
 export default function Navbar() {
@@ -48,7 +48,7 @@ export default function Navbar() {
       </Link>
 
       {/* Navegación */}
-      <div style={{ display: 'flex', height: '100%' }}>
+      <div className="r-nav-links" style={{ display: 'flex', height: '100%' }}>
         {links.map(({ to, label }) => (
           <NavLink key={to} to={to} style={({ isActive }) => ({
             display:       'flex',

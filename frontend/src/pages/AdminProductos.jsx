@@ -136,7 +136,7 @@ export default function AdminProductos() {
         {editId ? 'Editar Producto' : 'Nuevo Producto'}
       </h2>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: '48px', alignItems: 'start' }}>
+      <div className="r-grid-admin">
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

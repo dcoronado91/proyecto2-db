@@ -72,11 +72,7 @@ export default function Productos() {
       </div>
 
       {/* Grid 5 columnas */}
-      <div style={{
-        display:             'grid',
-        gridTemplateColumns: 'repeat(5, 1fr)',
-        gap:                 '16px',
-      }}>
+      <div className="r-grid-productos">
         {filtrados.map(p => (
           <ProductCard key={p.id} producto={p} onClick={() => navigate(`/producto/${p.id}`)} />
         ))}
