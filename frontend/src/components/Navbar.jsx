@@ -1,6 +1,6 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ROLES_STAFF } from '../App'
+import { ROLES_STAFF } from '../constants/roles'
 
 const LINKS_TODOS  = [
   { to: '/dashboard', label: 'Dashboard' },

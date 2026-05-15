@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import { getImagen } from '../data/imagenes'
 import { useAuth } from '../context/AuthContext'
-import { ROLES_STAFF } from '../App'
+import { ROLES_STAFF } from '../constants/roles'
 
 export default function Producto() {
   const { id }    = useParams()

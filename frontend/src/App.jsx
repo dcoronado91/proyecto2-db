@@ -8,6 +8,7 @@ import Ventas    from './pages/Ventas'
 import Reportes  from './pages/Reportes'
 import Producto  from './pages/Producto'
 import { useAuth } from './context/AuthContext'
+import { ROLES_STAFF } from './constants/roles'
 
 const SinAcceso = () => (
   <div style={{ padding: '80px 32px', textAlign: 'center' }}>
@@ -23,7 +24,6 @@ const SinAcceso = () => (
   </div>
 )
 
-export const ROLES_STAFF = ['admin', 'gerente', 'vendedor', 'cajero']
 
 const PrivateRoute = ({ children }) => {
   const { auth } = useAuth()
