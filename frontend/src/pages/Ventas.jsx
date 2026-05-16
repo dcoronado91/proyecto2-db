@@ -105,7 +105,7 @@ export default function Ventas() {
   )
 
   return (
-    <div style={{ padding: '40px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'start' }}>
+    <div className="r-grid-2col" style={{ padding: '40px 32px' }}>
 
       {/* ── Panel izquierdo: Formulario ── */}
       <div>

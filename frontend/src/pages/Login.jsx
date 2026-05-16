@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
+import { ROLES_STAFF } from '../constants/roles'
 
 export default function Login() {
   const [form,    setForm]    = useState({ username: '', password: '' })
@@ -17,7 +18,7 @@ export default function Login() {
     try {
       const { data } = await api.post('/auth/login', form)
       login(data)
-      navigate('/productos')
+      navigate(ROLES_STAFF.includes(data.rol) ? '/dashboard' : '/productos')
     } catch (err) {
       setError(err.response?.data?.error || 'Credenciales incorrectas')
     } finally {
