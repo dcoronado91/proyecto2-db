@@ -52,6 +52,8 @@ export default function Ventas() {
       setClientes(c.data)
       setEmpleados(e.data)
       setProductos(p.data)
+    }).catch(() => {
+      setResultado({ rollback: true, error: 'Error al cargar los datos. Recarga la página.' })
     }).finally(() => setLoading(false))
   }, [])
 

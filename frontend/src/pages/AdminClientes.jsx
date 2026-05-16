@@ -206,6 +206,11 @@ export default function AdminClientes() {
                 ))}
               </tbody>
             </table>
+            {clientes.length === 0 && (
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)', fontFamily: 'DM Mono', fontSize: '0.8rem' }}>
+                Sin clientes registrados
+              </div>
+            )}
           </div>
         </div>
       </div>

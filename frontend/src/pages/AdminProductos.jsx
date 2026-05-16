@@ -257,6 +257,11 @@ export default function AdminProductos() {
                 ))}
               </tbody>
             </table>
+            {productos.length === 0 && (
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)', fontFamily: 'DM Mono', fontSize: '0.8rem' }}>
+                Sin productos registrados
+              </div>
+            )}
           </div>
         </div>
       </div>
