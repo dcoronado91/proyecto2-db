@@ -8,7 +8,7 @@
 | Proyecto | Curso | Sección |
 |---|---|---|
 | Proyecto 1 — Base de datos relacional | CC3088 - Bases de Datos 1 | 10 |
-| Proyecto 2 — Aplicación web fullstack | CC3062 - Sistemas y Tecnologías Web | — |
+| Proyecto 2 — Aplicación web fullstack | CC3062 - Sistemas y Tecnologías Web | 10 |
 
 > **Nota de fusión:** Este repositorio combina ambos proyectos. El trabajo correspondiente a CC3088 (esquema SQL, vistas, subconsultas, transacciones y la documentación de cumplimiento de rúbrica SQL que aparece más abajo) quedó consolidado en el commit **`bbe2769`** del 3 de mayo de 2026. Todo lo que viene después de ese commit pertenece al proyecto web (CC3062).
 
