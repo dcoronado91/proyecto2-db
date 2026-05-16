@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const pool = require('../db');
+const auth = require('../middleware/auth');
 
 const router = Router();
 
@@ -30,7 +31,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/clientes
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   const { nombre, telefono, email, direccion } = req.body;
   if (!nombre) return res.status(400).json({ error: 'El nombre es requerido' });
   try {
@@ -47,7 +48,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/clientes/:id
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   const { nombre, telefono, email, direccion } = req.body;
   if (!nombre) return res.status(400).json({ error: 'El nombre es requerido' });
   try {
@@ -66,7 +67,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/clientes/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
       'DELETE FROM clientes WHERE id=$1 RETURNING id',

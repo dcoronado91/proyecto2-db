@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const pool = require('../db');
+const auth = require('../middleware/auth');
 
 const router = Router();
 
@@ -46,7 +47,7 @@ router.get('/:id', async (req, res) => {
 
 // TRANSACCIÓN: crea una venta completa con ROLLBACK si hay stock insuficiente
 // Body: { cliente_id, empleado_id, items: [{ producto_id, cantidad }] }
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   const { cliente_id, empleado_id, items } = req.body;
 
   if (!cliente_id || !empleado_id || !items?.length) {
