@@ -1,71 +1,49 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import api from '../api/axios'
 import { getImagen } from '../data/imagenes'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 import { ROLES_STAFF } from '../constants/roles'
-
-const selectStyle = {
-  background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)',
-  borderRadius: '2px', fontFamily: 'DM Mono, monospace', fontSize: '0.8rem',
-  padding: '9px 12px', outline: 'none', width: '100%', cursor: 'pointer',
-}
 
 export default function Producto() {
   const { id }   = useParams()
   const navigate = useNavigate()
   const { auth } = useAuth()
+  const { agregar, count } = useCart()
   const esStaff  = ROLES_STAFF.includes(auth.rol)
-  const clienteId = parseInt(auth.cliente_id || '0')
 
-  const [producto,   setProducto]   = useState(null)
-  const [empleados,  setEmpleados]  = useState([])
-  const [empleadoId, setEmpleadoId] = useState('')
-  const [loading,    setLoading]    = useState(true)
-  const [error,      setError]      = useState('')
-  const [imgError,   setImgError]   = useState(false)
-
-  const [cantidad,  setCantidad]  = useState(1)
-  const [comprando, setComprando] = useState(false)
-  const [resultado, setResultado] = useState(null)
+  const [producto,     setProducto]     = useState(null)
+  const [masProductos, setMasProductos] = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [error,        setError]        = useState('')
+  const [imgError,     setImgError]     = useState(false)
+  const [cantidad,     setCantidad]     = useState(1)
+  const [agregado,     setAgregado]     = useState(false)
 
   useEffect(() => {
-    const promesas = [api.get(`/productos/${id}`)]
-    if (!esStaff) promesas.push(api.get('/empleados'))
-
-    Promise.all(promesas)
-      .then(([prod, emps]) => {
-        setProducto(prod.data)
-        if (emps) setEmpleados(emps.data)
-      })
-      .catch(() => setError('Producto no encontrado'))
-      .finally(() => setLoading(false))
+    setLoading(true)
+    setError('')
+    setImgError(false)
+    setCantidad(1)
+    setAgregado(false)
+    Promise.all([
+      api.get(`/productos/${id}`),
+      api.get('/productos'),
+    ]).then(([prod, todos]) => {
+      setProducto(prod.data)
+      setMasProductos(
+        todos.data.filter(p => p.categoria_id === prod.data.categoria_id && p.id !== parseInt(id))
+      )
+    })
+    .catch(() => setError('Producto no encontrado'))
+    .finally(() => setLoading(false))
   }, [id])
 
-  const handleComprar = async () => {
-    if (!clienteId) {
-      setResultado({ ok: false, error: 'Tu cuenta no está vinculada a un cliente. Regístrate con rol "cliente".' })
-      return
-    }
-    if (!empleadoId) {
-      setResultado({ ok: false, error: 'Selecciona el vendedor que te está atendiendo.' })
-      return
-    }
-    setComprando(true)
-    setResultado(null)
-    try {
-      const { data } = await api.post('/ventas', {
-        cliente_id:  clienteId,
-        empleado_id: parseInt(empleadoId),
-        items: [{ producto_id: parseInt(id), cantidad }],
-      })
-      setResultado({ ok: true, venta_id: data.venta_id, total: data.total })
-      setProducto(prev => ({ ...prev, stock: prev.stock - cantidad }))
-    } catch (err) {
-      setResultado({ ok: false, error: err.response?.data?.error || 'Error al procesar' })
-    } finally {
-      setComprando(false)
-    }
+  const handleAgregar = () => {
+    agregar({ producto_id: parseInt(id), nombre: producto.nombre, precio: producto.precio, cantidad })
+    setAgregado(true)
+    setTimeout(() => setAgregado(false), 2000)
   }
 
   if (loading) return (
@@ -85,15 +63,17 @@ export default function Producto() {
     ? 'var(--warning)' : 'var(--success)'
 
   return (
-    <div style={{ padding: '40px 32px', maxWidth: '960px' }}>
+    <div style={{ padding: '40px 32px', maxWidth: '1100px', margin: '0 auto' }}>
 
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '28px' }}>
         <button
           onClick={() => navigate('/productos')}
-          style={{ background: 'none', border: 'none', fontFamily: 'DM Mono', fontSize: '0.72rem', color: 'var(--muted)', cursor: 'pointer', padding: 0 }}
+          style={{ background: 'none', border: 'none', fontFamily: 'DM Mono', fontSize: '0.72rem', color: 'var(--muted)', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '4px' }}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--muted)'}
         >
-          Productos
+          ← Productos
         </button>
         <span style={{ color: 'var(--border)', fontFamily: 'DM Mono', fontSize: '0.72rem' }}>›</span>
         <span style={{ fontFamily: 'DM Mono', fontSize: '0.72rem', color: 'var(--accent)' }}>
@@ -171,113 +151,144 @@ export default function Producto() {
                   REGISTRAR VENTA →
                 </button>
               ) : (
-                <>
-                  {!resultado ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-
-                      {/* Selector de vendedor */}
-                      <div>
-                        <label style={{
-                          display: 'block', fontFamily: 'DM Mono, monospace', fontSize: '0.62rem',
-                          letterSpacing: '0.15em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '8px',
-                        }}>
-                          Vendedor que te atiende
-                        </label>
-                        <select
-                          value={empleadoId}
-                          onChange={e => setEmpleadoId(e.target.value)}
-                          style={{
-                            ...selectStyle,
-                            borderColor: resultado?.error && !empleadoId ? 'var(--danger)' : 'var(--border)',
-                          }}
-                          onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                          onBlur={e  => e.target.style.borderColor = 'var(--border)'}
-                        >
-                          <option value="">— seleccionar vendedor —</option>
-                          {empleados.map(emp => (
-                            <option key={emp.id} value={emp.id}>
-                              {emp.nombre} · {emp.puesto}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Selector de cantidad */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span style={{ fontFamily: 'DM Mono', fontSize: '0.65rem', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>
-                          Cantidad
-                        </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1px' }}>
-                          <button
-                            onClick={() => setCantidad(c => Math.max(1, c - 1))}
-                            style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', width: '32px', height: '32px', cursor: 'pointer', fontFamily: 'DM Mono', borderRadius: '2px 0 0 2px' }}
-                          >−</button>
-                          <span style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: 'none', borderRight: 'none', padding: '0 16px', height: '32px', display: 'flex', alignItems: 'center', fontFamily: 'DM Mono', fontSize: '0.9rem', color: 'var(--text)', minWidth: '48px', justifyContent: 'center' }}>
-                            {cantidad}
-                          </span>
-                          <button
-                            onClick={() => setCantidad(c => Math.min(producto.stock, c + 1))}
-                            style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', width: '32px', height: '32px', cursor: 'pointer', fontFamily: 'DM Mono', borderRadius: '0 2px 2px 0' }}
-                          >+</button>
-                        </div>
-                        <span style={{ fontFamily: 'DM Mono', fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 700 }}>
-                          = Q{(parseFloat(producto.precio) * cantidad).toLocaleString('es-GT', { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {/* Cantidad */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontFamily: 'DM Mono', fontSize: '0.65rem', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+                      Cantidad
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1px' }}>
                       <button
-                        onClick={handleComprar}
-                        disabled={comprando}
-                        style={{
-                          background: comprando ? 'var(--border)' : 'var(--accent)',
-                          color: '#0a0b0e', border: 'none', borderRadius: '2px',
-                          fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.8rem',
-                          letterSpacing: '0.15em', padding: '14px',
-                          cursor: comprando ? 'not-allowed' : 'pointer', opacity: comprando ? 0.6 : 1,
-                        }}
-                      >
-                        {comprando ? 'PROCESANDO...' : 'COMPRAR AHORA →'}
-                      </button>
+                        onClick={() => setCantidad(c => Math.max(1, c - 1))}
+                        style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', width: '32px', height: '32px', cursor: 'pointer', fontFamily: 'DM Mono', borderRadius: '2px 0 0 2px' }}
+                      >−</button>
+                      <span style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: 'none', borderRight: 'none', padding: '0 16px', height: '32px', display: 'flex', alignItems: 'center', fontFamily: 'DM Mono', fontSize: '0.9rem', color: 'var(--text)', minWidth: '48px', justifyContent: 'center' }}>
+                        {cantidad}
+                      </span>
+                      <button
+                        onClick={() => setCantidad(c => Math.min(producto.stock, c + 1))}
+                        style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', width: '32px', height: '32px', cursor: 'pointer', fontFamily: 'DM Mono', borderRadius: '0 2px 2px 0' }}
+                      >+</button>
                     </div>
-                  ) : (
-                    <div style={{
-                      padding: '16px 20px', borderRadius: '2px',
-                      border: `1px solid ${resultado.ok ? 'rgba(6,214,160,0.35)' : 'rgba(255,77,109,0.35)'}`,
-                      background: resultado.ok ? 'rgba(6,214,160,0.05)' : 'rgba(255,77,109,0.05)',
+                    <span style={{ fontFamily: 'DM Mono', fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 700 }}>
+                      = Q{(parseFloat(producto.precio) * cantidad).toLocaleString('es-GT', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={handleAgregar}
+                    disabled={agregado}
+                    style={{
+                      background: agregado ? 'rgba(6,214,160,0.15)' : 'var(--accent)',
+                      color: agregado ? 'var(--success)' : '#0a0b0e',
+                      border: agregado ? '1px solid rgba(6,214,160,0.4)' : 'none',
+                      borderRadius: '2px', fontFamily: 'Syne, sans-serif', fontWeight: 800,
+                      fontSize: '0.8rem', letterSpacing: '0.15em', padding: '14px',
+                      cursor: agregado ? 'default' : 'pointer', transition: 'all 0.2s',
+                    }}
+                  >
+                    {agregado ? '✓ AGREGADO AL CARRITO' : 'AGREGAR AL CARRITO →'}
+                  </button>
+
+                  {count > 0 && (
+                    <Link to="/carrito" style={{
+                      display: 'block', textAlign: 'center', padding: '10px',
+                      background: 'var(--surface-2)', border: '1px solid var(--border)',
+                      color: 'var(--accent)', textDecoration: 'none',
+                      fontFamily: 'DM Mono', fontSize: '0.72rem', letterSpacing: '0.1em',
+                      borderRadius: '2px',
                     }}>
-                      {resultado.ok ? (
-                        <>
-                          <p style={{ fontFamily: 'DM Mono', fontSize: '0.65rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--success)', margin: '0 0 6px' }}>
-                            ✓ Compra registrada — Orden #{resultado.venta_id}
-                          </p>
-                          <p style={{ fontFamily: 'DM Mono', fontSize: '0.8rem', color: 'var(--success)', margin: 0 }}>
-                            Total: Q{parseFloat(resultado.total).toLocaleString('es-GT', { minimumFractionDigits: 2 })}
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p style={{ fontFamily: 'DM Mono', fontSize: '0.65rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--danger)', margin: '0 0 6px' }}>
-                            ⚠ No se pudo completar
-                          </p>
-                          <p style={{ fontFamily: 'DM Mono', fontSize: '0.8rem', color: 'var(--danger)', margin: 0 }}>
-                            {resultado.error}
-                          </p>
-                          <button
-                            onClick={() => setResultado(null)}
-                            style={{ marginTop: '10px', background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: '2px', fontFamily: 'DM Mono', fontSize: '0.65rem', padding: '5px 12px', cursor: 'pointer' }}
-                          >
-                            Intentar de nuevo
-                          </button>
-                        </>
-                      )}
-                    </div>
+                      Ver carrito ({count} {count === 1 ? 'producto' : 'productos'})
+                    </Link>
                   )}
-                </>
+                </div>
               )}
             </div>
           )}
-
         </div>
+      </div>
+
+      {/* Más productos de la misma categoría */}
+      {!esStaff && masProductos.length > 0 && (
+        <div style={{ marginTop: '64px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '20px' }}>
+            <h3 className="font-display font-bold" style={{ fontSize: '1.25rem', color: 'var(--text)', margin: 0 }}>
+              También te puede interesar
+            </h3>
+            <span style={{ fontFamily: 'DM Mono', fontSize: '0.62rem', letterSpacing: '0.15em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+              {producto.categoria}
+            </span>
+          </div>
+          <div className="r-scroll-productos">
+            {masProductos.map(p => (
+              <MasProductoCard key={p.id} p={p} agregar={agregar} navigate={navigate} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MasProductoCard({ p, agregar, navigate }) {
+  const [imgErr, setImgErr] = useState(false)
+  const [added,  setAdded]  = useState(false)
+
+  const handleAdd = (e) => {
+    e.stopPropagation()
+    agregar({ producto_id: p.id, nombre: p.nombre, precio: p.precio, cantidad: 1 })
+    setAdded(true)
+    setTimeout(() => setAdded(false), 1800)
+  }
+
+  return (
+    <div
+      onClick={() => navigate(`/producto/${p.id}`)}
+      style={{
+        flex: '0 0 200px', border: '1px solid var(--border)', borderRadius: '2px',
+        background: 'var(--surface)', cursor: 'pointer', overflow: 'hidden',
+        transition: 'border-color 0.15s', scrollSnapAlign: 'start',
+      }}
+      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
+      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+    >
+      <div style={{ aspectRatio: '4/3', background: 'var(--surface-2)', overflow: 'hidden' }}>
+        {!imgErr && getImagen(p.id) ? (
+          <img
+            src={getImagen(p.id)} alt={p.nombre}
+            onError={() => setImgErr(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontFamily: 'DM Mono', fontSize: '0.6rem', color: 'var(--muted)', letterSpacing: '0.1em' }}>
+              {p.categoria?.toUpperCase()}
+            </span>
+          </div>
+        )}
+      </div>
+      <div style={{ padding: '12px' }}>
+        <p style={{ fontFamily: 'DM Sans', fontWeight: 500, fontSize: '0.78rem', color: 'var(--text)', margin: '0 0 4px', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+          {p.nombre}
+        </p>
+        <p style={{ fontFamily: 'DM Mono', fontSize: '0.82rem', color: 'var(--accent)', fontWeight: 700, margin: '0 0 10px' }}>
+          Q{parseFloat(p.precio).toFixed(2)}
+        </p>
+        <button
+          onClick={handleAdd}
+          disabled={added || p.stock === 0}
+          style={{
+            width: '100%', padding: '7px',
+            background: added ? 'rgba(6,214,160,0.15)' : p.stock === 0 ? 'var(--border)' : 'var(--accent-dim)',
+            border: added ? '1px solid rgba(6,214,160,0.4)' : `1px solid ${p.stock === 0 ? 'transparent' : 'rgba(200,255,71,0.3)'}`,
+            color: added ? 'var(--success)' : p.stock === 0 ? 'var(--muted)' : 'var(--accent)',
+            borderRadius: '2px', fontFamily: 'DM Mono', fontSize: '0.65rem',
+            letterSpacing: '0.1em', cursor: added || p.stock === 0 ? 'default' : 'pointer',
+            transition: 'all 0.15s',
+          }}
+        >
+          {added ? '✓ Agregado' : p.stock === 0 ? 'Agotado' : '+ Agregar'}
+        </button>
       </div>
     </div>
   )

@@ -59,12 +59,12 @@ router.post('/', auth, async (req, res) => {
     await client.query('BEGIN');
 
     // Insertar la venta con total 0 provisional
-    const { rows: [venta] } = await client.query(
+    const insertResult = await client.query(
       `INSERT INTO ventas (cliente_id, empleado_id, total)
       VALUES ($1, $2, 0) RETURNING id`,
       [cliente_id, empleado_id]
     );
-    const venta_id = venta.id;
+    const venta_id = parseInt(insertResult.rows[0].id, 10);
     let total = 0;
 
     for (const item of items) {
@@ -117,9 +117,9 @@ router.post('/', auth, async (req, res) => {
 
     res.status(201).json({
       rollback: false,
-      venta_id,
-      total,
-      mensaje: 'Venta registrada correctamente'
+      venta_id: Number(venta_id),
+      total:    Number(total.toFixed(2)),
+      mensaje:  'Venta registrada correctamente'
     });
 
   } catch (err) {
