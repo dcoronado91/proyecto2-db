@@ -1,5 +1,6 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 import { ROLES_STAFF } from '../constants/roles'
 
 const LINKS_TODOS  = [
@@ -14,8 +15,10 @@ const LINKS_STAFF  = [
 ]
 
 export default function Navbar() {
-  const navigate       = useNavigate()
+  const navigate         = useNavigate()
   const { auth, logout } = useAuth()
+  const { count }        = useCart()
+  const esCliente        = auth.token && !ROLES_STAFF.includes(auth.rol)
   const links = ROLES_STAFF.includes(auth.rol)
     ? [...LINKS_TODOS, ...LINKS_STAFF]
     : LINKS_TODOS
@@ -69,6 +72,25 @@ export default function Navbar() {
 
       {/* Usuario */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        {esCliente && (
+          <Link to="/carrito" style={{ position: 'relative', display: 'flex', alignItems: 'center', color: count > 0 ? 'var(--accent)' : 'var(--muted)', textDecoration: 'none', transition: 'color 0.15s' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            {count > 0 && (
+              <span style={{
+                position: 'absolute', top: '-7px', right: '-8px',
+                background: 'var(--accent)', color: '#0a0b0e',
+                borderRadius: '50%', width: '16px', height: '16px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'DM Mono', fontSize: '0.6rem', fontWeight: 700,
+              }}>
+                {count > 9 ? '9+' : count}
+              </span>
+            )}
+          </Link>
+        )}
         <span className="font-data text-xs" style={{ color: 'var(--muted)' }}>
           {auth.username}
         </span>

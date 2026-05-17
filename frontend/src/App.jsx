@@ -9,6 +9,7 @@ import Reportes  from './pages/Reportes'
 import Producto       from './pages/Producto'
 import AdminProductos  from './pages/AdminProductos'
 import AdminClientes   from './pages/AdminClientes'
+import Carrito         from './pages/Carrito'
 import { useAuth } from './context/AuthContext'
 import { ROLES_STAFF } from './constants/roles'
 
@@ -36,6 +37,13 @@ const StaffRoute = ({ children }) => {
   const { auth } = useAuth()
   if (!auth.token) return <Navigate to="/login" replace />
   if (!ROLES_STAFF.includes(auth.rol)) return <Navigate to="/sin-acceso" replace />
+  return children
+}
+
+const ClientRoute = ({ children }) => {
+  const { auth } = useAuth()
+  if (!auth.token) return <Navigate to="/login" replace />
+  if (ROLES_STAFF.includes(auth.rol)) return <Navigate to="/dashboard" replace />
   return children
 }
 
@@ -74,6 +82,9 @@ export default function App() {
         } />
         <Route path="/producto/:id" element={
           <PrivateRoute><Layout><Producto /></Layout></PrivateRoute>
+        } />
+        <Route path="/carrito" element={
+          <ClientRoute><Layout><Carrito /></Layout></ClientRoute>
         } />
         <Route path="/admin/productos" element={
           <StaffRoute><Layout><AdminProductos /></Layout></StaffRoute>
