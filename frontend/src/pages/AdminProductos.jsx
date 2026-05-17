@@ -131,7 +131,7 @@ export default function AdminProductos() {
   if (loading) return <div style={{ padding: '40px 32px' }}><p style={{ fontFamily: 'DM Mono', fontSize: '0.8rem', color: 'var(--muted)' }}>Cargando...</p></div>
 
   return (
-    <div style={{ padding: '40px 32px' }}>
+    <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
       <h2 className="font-display font-bold" style={{ fontSize: '2rem', color: 'var(--text)', margin: '0 0 32px' }}>
         {editId ? 'Editar Producto' : 'Nuevo Producto'}
       </h2>
