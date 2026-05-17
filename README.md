@@ -18,6 +18,13 @@
 
 Sistema de gestión para una tienda de tecnología construido como proyecto universitario. Cubre el ciclo completo: autenticación con roles, catálogo de productos, registro de ventas con transacciones y ROLLBACK visible, reportes SQL avanzados y portal de compra para clientes.
 
+## Demo en producción
+
+| Servicio | URL |
+|---|---|
+| Frontend (Netlify) | https://tienda-tech-frontend.netlify.app/ |
+| Backend / API (Vercel) | https://tienda-tech-liart.vercel.app/ |
+
 ---
 
 ## Stack tecnológico
@@ -141,7 +148,8 @@ proyecto2/
 
 ## API Reference
 
-Base URL: `http://localhost:4000/api`
+Base URL (local): `http://localhost:4000/api`
+Base URL (producción): `https://tienda-tech-liart.vercel.app/api`
 
 Las rutas marcadas con 🔒 requieren el header `Authorization: Bearer <token>`.
 
