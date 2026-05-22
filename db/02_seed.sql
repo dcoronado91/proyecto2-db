@@ -273,3 +273,33 @@ INSERT INTO usuarios (username, password_hash, rol) VALUES
 ('alfredo.v',    '$2b$10$V2W3X4Y5Z6A7B8C9D0E1F2G3H4I5J6K7L8M9N0O1P2Q3', 'bodeguero'),
 ('diana.e',      '$2b$10$W3X4Y5Z6A7B8C9D0E1F2G3H4I5J6K7L8M9N0O1P2Q3R4', 'vendedor'),
 ('enrique.m',    '$2b$10$X4Y5Z6A7B8C9D0E1F2G3H4I5J6K7L8M9N0O1P2Q3R4S5', 'cajero');
+
+-- ─────────────────────────────────────────────
+-- USUARIOS DE PRUEBA PROYECTO 3
+-- Un usuario funcional por cada rol del DBMS.
+-- Contraseña de todos: secret
+-- Hashes generados con bcrypt, cost 10.
+-- ─────────────────────────────────────────────
+
+-- Cliente base para el usuario rol cliente
+INSERT INTO clientes (nombre, telefono, email, direccion)
+VALUES ('Cliente Prueba P3', '5599-0001', 'cliente.p3@tienda.com', 'Zona 10, Guatemala');
+
+-- Usuarios de prueba (password: secret)
+INSERT INTO usuarios (username, password_hash, rol, cliente_id) VALUES
+('admin_p3',
+ '$2a$10$j.zeq8YWf60zQX4pqzLGCuVnZNnYWuz44CAoNiE7PolGdGx.qRJDe',
+ 'admin', NULL),
+('gerente_p3',
+ '$2a$10$Ok0pMJzAroH5QFdlke8YS.L1Onlkum1Jub1Ij1o6YfyMExCPcmwPm',
+ 'gerente', NULL),
+('vendedor_p3',
+ '$2a$10$YDMW8gEZK1osdLpQUPtc9.1g67u7lCkmcMA4JWcLZY3fvFNX1PrbW',
+ 'vendedor', NULL),
+('bodeguero_p3',
+ '$2a$10$Pe/VqZEQuhdzq5gk1IxkCOnDTZiXODicJuEPP4ZL19p6HIG4hbwCi',
+ 'bodeguero', NULL),
+('cliente_p3',
+ '$2a$10$DkElPv9BdPW38HHnBVN2fuJ/see/9FykjwWtcPOoSqTqvmLLXnshC',
+ 'cliente',
+ (SELECT id FROM clientes WHERE email = 'cliente.p3@tienda.com'));
