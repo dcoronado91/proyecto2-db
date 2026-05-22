@@ -1,11 +1,21 @@
 const { Router } = require('express');
-const pool = require('../db');
-const auth = require('../middleware/auth');
+const { body, param, validationResult } = require('express-validator');
+const pool      = require('../db');
+const auth      = require('../middleware/auth');
+const authorize = require('../middleware/authorize');
 
 const router = Router();
 
-// JOIN 2: ventas con cliente y empleado (usa la VIEW)
-router.get('/', async (req, res) => {
+const validarCampos = (req, res, next) => {
+  const errores = validationResult(req);
+  if (!errores.isEmpty()) {
+    return res.status(400).json({ errores: errores.array() });
+  }
+  next();
+};
+
+// GET /api/ventas — usa la VIEW del proyecto 2
+router.get('/', auth, authorize('admin', 'gerente', 'vendedor', 'cajero'), async (req, res) => {
   try {
     const { rows } = await pool.query(
       'SELECT * FROM vista_ventas_completa ORDER BY fecha DESC'
@@ -16,118 +26,82 @@ router.get('/', async (req, res) => {
   }
 });
 
-// JOIN 3: detalle de una venta — une detalle_venta con productos y categorias
-router.get('/:id', async (req, res) => {
-  try {
-    const venta = await pool.query(
-      'SELECT * FROM vista_ventas_completa WHERE venta_id = $1',
-      [req.params.id]
-    );
-    if (!venta.rows.length) return res.status(404).json({ error: 'No encontrada' });
-
-    const detalle = await pool.query(`
-      SELECT
-        dv.cantidad,
-        dv.precio_unitario,
-        dv.subtotal,
-        p.nombre      AS producto,
-        c.nombre      AS categoria
-      FROM detalle_venta dv
-      JOIN productos  p ON dv.producto_id   = p.id
-      JOIN categorias c ON p.categoria_id   = c.id
-      WHERE dv.venta_id = $1
-      ORDER BY p.nombre
-    `, [req.params.id]);
-
-    res.json({ ...venta.rows[0], detalle: detalle.rows });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// TRANSACCIÓN: crea una venta completa con ROLLBACK si hay stock insuficiente
-// Body: { cliente_id, empleado_id, items: [{ producto_id, cantidad }] }
-router.post('/', auth, async (req, res) => {
-  const { cliente_id, empleado_id, items } = req.body;
-
-  if (!cliente_id || !empleado_id || !items?.length) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios' });
-  }
-
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    // Insertar la venta con total 0 provisional
-    const insertResult = await client.query(
-      `INSERT INTO ventas (cliente_id, empleado_id, total)
-      VALUES ($1, $2, 0) RETURNING id`,
-      [cliente_id, empleado_id]
-    );
-    const venta_id = parseInt(insertResult.rows[0].id, 10);
-    let total = 0;
-
-    for (const item of items) {
-      // Bloquea la fila del producto para evitar condiciones de carrera
-      const { rows } = await client.query(
-        'SELECT nombre, precio, stock FROM productos WHERE id = $1 FOR UPDATE',
-        [item.producto_id]
+// GET /api/ventas/:id
+router.get('/:id',
+  auth, authorize('admin', 'gerente', 'vendedor', 'cajero'),
+  [param('id').isInt({ min: 1 }).withMessage('id inválido').toInt()],
+  validarCampos,
+  async (req, res) => {
+    try {
+      const venta = await pool.query(
+        'SELECT * FROM vista_ventas_completa WHERE venta_id = $1',
+        [req.params.id]
       );
+      if (!venta.rows.length) return res.status(404).json({ error: 'Venta no encontrada' });
 
-      if (!rows.length) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({
-          rollback: true,
-          error: `Producto con id ${item.producto_id} no existe`
-        });
-      }
+      const detalle = await pool.query(`
+        SELECT dv.cantidad, dv.precio_unitario, dv.subtotal,
+               p.nombre AS producto, c.nombre AS categoria
+          FROM detalle_venta dv
+          JOIN productos  p ON dv.producto_id = p.id
+          JOIN categorias c ON p.categoria_id = c.id
+         WHERE dv.venta_id = $1
+         ORDER BY p.nombre
+      `, [req.params.id]);
 
-      const producto = rows[0];
-
-      if (producto.stock < item.cantidad) {
-        await client.query('ROLLBACK');
-        return res.status(409).json({
-          rollback: true,
-          error: `Stock insuficiente para "${producto.nombre}". Disponible: ${producto.stock}, solicitado: ${item.cantidad}`
-        });
-      }
-
-      const subtotal = parseFloat(producto.precio) * item.cantidad;
-      total += subtotal;
-
-      await client.query(
-        `INSERT INTO detalle_venta (venta_id, producto_id, cantidad, precio_unitario, subtotal)
-        VALUES ($1, $2, $3, $4, $5)`,
-        [venta_id, item.producto_id, item.cantidad, producto.precio, subtotal]
-      );
-
-      await client.query(
-        'UPDATE productos SET stock = stock - $1 WHERE id = $2',
-        [item.cantidad, item.producto_id]
-      );
+      res.json({ ...venta.rows[0], detalle: detalle.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
-
-    // Actualizar el total real de la venta
-    await client.query(
-      'UPDATE ventas SET total = $1 WHERE id = $2',
-      [total, venta_id]
-    );
-
-    await client.query('COMMIT');
-
-    res.status(201).json({
-      rollback: false,
-      venta_id: Number(venta_id),
-      total:    Number(total.toFixed(2)),
-      mensaje:  'Venta registrada correctamente'
-    });
-
-  } catch (err) {
-    await client.query('ROLLBACK');
-    res.status(500).json({ rollback: true, error: err.message });
-  } finally {
-    client.release();
   }
-});
+);
+
+// POST /api/ventas — invoca sp_registrar_venta (stored procedure con ROLLBACK)
+router.post('/',
+  auth, authorize('admin', 'gerente', 'vendedor', 'cajero'),
+  [
+    body('cliente_id')
+      .isInt({ min: 1 }).withMessage('cliente_id debe ser un entero positivo')
+      .toInt(),
+    body('empleado_id')
+      .isInt({ min: 1 }).withMessage('empleado_id debe ser un entero positivo')
+      .toInt(),
+    body('items')
+      .isArray({ min: 1 }).withMessage('items debe ser un arreglo con al menos un elemento'),
+    body('items.*.producto_id')
+      .isInt({ min: 1 }).withMessage('producto_id de cada item debe ser un entero positivo')
+      .toInt(),
+    body('items.*.cantidad')
+      .isInt({ min: 1 }).withMessage('cantidad de cada item debe ser mayor a cero')
+      .toInt(),
+  ],
+  validarCampos,
+  async (req, res) => {
+    const { cliente_id, empleado_id, items } = req.body;
+
+    try {
+      // sp_registrar_venta maneja la transacción con ROLLBACK interno
+      const result = await pool.query(
+        'CALL sp_registrar_venta($1, $2, $3::json, 0, 0::numeric, \'\')',
+        [cliente_id, empleado_id, JSON.stringify(items)]
+      );
+
+      const { p_venta_id, p_total, p_error } = result.rows[0];
+
+      if (p_error && p_error.trim() !== '') {
+        return res.status(409).json({ rollback: true, error: p_error });
+      }
+
+      res.status(201).json({
+        rollback:  false,
+        venta_id:  Number(p_venta_id),
+        total:     Number(p_total),
+        mensaje:   'Venta registrada correctamente',
+      });
+    } catch (err) {
+      res.status(500).json({ rollback: true, error: err.message });
+    }
+  }
+);
 
 module.exports = router;
