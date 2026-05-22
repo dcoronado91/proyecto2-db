@@ -657,3 +657,114 @@ POST /api/ventas → BEGIN → FOR UPDATE → stock check
 ```
 
 *Archivo:* `backend/routes/ventas.js`
+
+---
+
+## Proyecto 3 — Seguridad, Roles, Stored Procedures y ORM
+
+Esta rama (`proyecto-3`) extiende el Proyecto 2 con seguridad a nivel de base de datos.
+
+### Levantar desde cero
+
+```bash
+docker compose down -v
+docker compose up
+```
+
+Credenciales de la base de datos: **usuario** `proy3` / **contraseña** `secret`.
+
+---
+
+### Esquema de roles en el DBMS
+
+Definidos en `db/04_roles.sql` mediante `CREATE ROLE` con permisos granulares (`GRANT` / `REVOKE`).
+
+| Rol DBMS       | Rol aplicación | Tablas con acceso                                          | Operaciones permitidas                        |
+|----------------|----------------|------------------------------------------------------------|-----------------------------------------------|
+| `rol_admin`    | admin          | Todas                                                      | SELECT, INSERT, UPDATE, DELETE                |
+| `rol_gerente`  | gerente        | Todas                                                      | SELECT en todo; INSERT/UPDATE en ventas       |
+| `rol_vendedor` | vendedor/cajero| productos, clientes, categorías, proveedores, ventas       | SELECT; INSERT en ventas; UPDATE stock        |
+| `rol_bodeguero`| bodeguero      | productos, categorías, proveedores                         | SELECT, INSERT, UPDATE; DELETE en productos   |
+| `rol_cliente`  | cliente        | productos, categorías, ventas, detalle_venta               | Solo SELECT                                   |
+
+---
+
+### Usuarios de prueba (contraseña: `secret`)
+
+| Username       | Rol          | Acceso en la UI                                    |
+|----------------|--------------|----------------------------------------------------|
+| `admin_p3`     | admin        | Todo: dashboard, ventas, reportes, inventario, clientes |
+| `gerente_p3`   | gerente      | Dashboard, ventas, reportes, clientes              |
+| `vendedor_p3`  | vendedor     | Dashboard, ventas                                  |
+| `bodeguero_p3` | bodeguero    | Dashboard, inventario                              |
+| `cliente_p3`   | cliente      | Catálogo de productos, carrito                     |
+
+---
+
+### Stored Procedures (`db/05_stored_procedures.sql`)
+
+| Procedure / Function           | Tipo         | Descripción                                                    |
+|--------------------------------|--------------|----------------------------------------------------------------|
+| `sp_registrar_venta`           | PROCEDURE    | Crea una venta completa con transacción explícita y ROLLBACK   |
+| `sp_actualizar_stock`          | FUNCTION     | Ajusta stock; parámetros IN/OUT + manejo de excepciones        |
+| `sp_crear_producto`            | FUNCTION     | Crea producto con validaciones; retorna id o error             |
+| `sp_actualizar_producto`       | FUNCTION     | Actualiza producto con validaciones                            |
+| `sp_eliminar_producto`         | FUNCTION     | Elimina solo si no tiene ventas; lanza excepción si las tiene  |
+| `sp_reporte_ventas_periodo`    | FUNCTION     | Reporte de ventas entre dos fechas (RETURNS TABLE)             |
+
+Todos se invocan desde el backend (nunca desde scripts independientes).
+
+---
+
+### ORM — Sequelize
+
+Configurado en `backend/sequelize.js`. Modelos en `backend/models/`.
+
+| Ruta / Operación                     | Método ORM usado          |
+|--------------------------------------|---------------------------|
+| `GET /api/categorias`                | `Categoria.findAll()`     |
+| `GET /api/categorias/:id`            | `Categoria.findByPk()`    |
+| `POST /api/categorias`               | `Categoria.create()`      |
+| `PUT /api/categorias/:id`            | `categoria.update()`      |
+| `DELETE /api/categorias/:id`         | `categoria.destroy()`     |
+| `GET /api/clientes`                  | `Cliente.findAll()`       |
+| `POST /api/clientes`                 | `Cliente.create()`        |
+| `PUT /api/clientes/:id`              | `cliente.update()`        |
+| `GET /api/proveedores`               | `Proveedor.findAll()`     |
+| `POST /api/proveedores`              | `Proveedor.create()`      |
+| `GET /api/productos`                 | `Producto.findAll()` con `include` |
+| `GET /api/productos/:id`             | `Producto.findByPk()` con `include` |
+
+---
+
+### Seguridad de inputs (protección contra SQL Injection)
+
+Todas las rutas que aceptan datos del usuario usan `express-validator`:
+- Sanitización (`trim`, `escape`) en todos los campos de texto
+- Validación de tipos: enteros, floats, emails, fechas ISO 8601
+- Longitudes máximas por campo
+- Regex para teléfonos y usernames
+- Sequelize y `pg` usan parámetros posicionales (`$1`, `$2`) — nunca interpolación de strings
+
+---
+
+### Estructura adicional (Proyecto 3)
+
+```
+db/
+├── 04_roles.sql             # CREATE ROLE + GRANT/REVOKE para 5 roles
+└── 05_stored_procedures.sql # 6 stored procedures y funciones
+
+backend/
+├── sequelize.js             # Configuración Sequelize
+├── models/
+│   ├── index.js             # Exporta modelos + asociaciones
+│   ├── Categoria.js
+│   ├── Cliente.js
+│   ├── Empleado.js
+│   ├── Producto.js
+│   └── Proveedor.js
+└── middleware/
+    ├── auth.js              # Verificación JWT (sin cambios)
+    └── authorize.js         # Autorización por rol: authorize('admin', 'gerente')
+```
