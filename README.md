@@ -91,13 +91,14 @@ POST http://localhost:4000/api/auth/register
 
 ### Roles y permisos
 
-| Rol | Dashboard | Productos | Detalle | Ventas | Reportes |
-|---|:---:|:---:|:---:|:---:|:---:|
-| `admin` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `gerente` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `vendedor` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `cajero` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `cliente` | — | ✓ | ✓ (comprar) | — | — |
+| Rol | Dashboard | Catálogo | Ventas | Reportes | Inventario | Clientes | Carrito |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| `admin`     | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — |
+| `gerente`   | ✓ | ✓ | ✓ | ✓ | — | ✓ | — |
+| `vendedor`  | ✓ | ✓ | ✓ | — | — | — | — |
+| `cajero`    | ✓ | ✓ | ✓ | — | — | — | — |
+| `bodeguero` | — | — | — | — | ✓ | — | — |
+| `cliente`   | — | ✓ | — | — | — | — | ✓ |
 
 ---
 
@@ -542,8 +543,8 @@ El backend lee las siguientes variables (configuradas en `docker-compose.yml`):
 
 | Variable | Valor en desarrollo |
 |---|---|
-| `DATABASE_URL` | `postgres://proy2:secret@db:5432/tienda` |
-| `JWT_SECRET` | `clave_super_secreta_cambiar_en_produccion` |
+| `DATABASE_URL` | `postgres://proy3:secret@db:5432/tienda` |
+| `JWT_SECRET` | Definir en `.env` en la raíz (mínimo 32 chars). En Docker, se lee via `${JWT_SECRET}` del compose. |
 | `PORT` | `4000` |
 
 ---
@@ -699,7 +700,7 @@ Definidos en `db/04_roles.sql` mediante `CREATE ROLE` con permisos granulares (`
 | `admin_p3`     | admin        | Todo: dashboard, ventas, reportes, inventario, clientes |
 | `gerente_p3`   | gerente      | Dashboard, ventas, reportes, clientes              |
 | `vendedor_p3`  | vendedor     | Dashboard, ventas                                  |
-| `bodeguero_p3` | bodeguero    | Dashboard, inventario                              |
+| `bodeguero_p3` | bodeguero    | Inventario                                         |
 | `cliente_p3`   | cliente      | Catálogo de productos, carrito                     |
 
 ---
@@ -708,7 +709,7 @@ Definidos en `db/04_roles.sql` mediante `CREATE ROLE` con permisos granulares (`
 
 | Procedure / Function           | Tipo         | Descripción                                                    |
 |--------------------------------|--------------|----------------------------------------------------------------|
-| `sp_registrar_venta`           | PROCEDURE    | Crea una venta completa con transacción explícita y ROLLBACK   |
+| `sp_registrar_venta`           | FUNCTION     | Crea una venta completa con transacción y ROLLBACK automático (EXCEPTION block) |
 | `sp_actualizar_stock`          | FUNCTION     | Ajusta stock; parámetros IN/OUT + manejo de excepciones        |
 | `sp_crear_producto`            | FUNCTION     | Crea producto con validaciones; retorna id o error             |
 | `sp_actualizar_producto`       | FUNCTION     | Actualiza producto con validaciones                            |
