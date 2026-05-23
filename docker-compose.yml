@@ -33,7 +33,7 @@ services:
       - /app/node_modules
     environment:
       DATABASE_URL: postgres://proy3:secret@db:5432/tienda
-      JWT_SECRET: 13e65cde2150985e3643ca133a4c356f723609130a0258fa9e9335597958963f209072dca8dc0a794a75c6fc8509f3aeea48be007a76c9e7bd84fce4177e9400
+      JWT_SECRET: ${JWT_SECRET:-13e65cde2150985e3643ca133a4c356f723609130a0258fa9e9335597958963f209072dca8dc0a794a75c6fc8509f3aeea48be007a76c9e7bd84fce4177e9400}
       PORT: 4000
       FRONTEND_URL: http://localhost:5173
     ports:
