@@ -9,19 +9,20 @@
 
 -- ─────────────────────────────────────────────
 -- SP 1: sp_registrar_venta
--- Registra una venta completa con manejo de
--- transacción explícita y ROLLBACK ante errores
--- de stock o datos inválidos.
--- Params INOUT: p_venta_id, p_total, p_error
+-- Registra una venta completa. Usa RAISE EXCEPTION
+-- para provocar el rollback automático del bloque
+-- EXCEPTION (compatible con el driver pg de Node).
+-- Params OUT: p_venta_id, p_total, p_error
 -- ─────────────────────────────────────────────
-CREATE OR REPLACE PROCEDURE sp_registrar_venta(
+CREATE OR REPLACE FUNCTION sp_registrar_venta(
     p_cliente_id  INT,
     p_empleado_id INT,
     p_items       JSON,
-    INOUT p_venta_id INT     DEFAULT 0,
-    INOUT p_total    NUMERIC DEFAULT 0,
-    INOUT p_error    TEXT    DEFAULT ''
+    OUT p_venta_id INT,
+    OUT p_total    NUMERIC,
+    OUT p_error    TEXT
 )
+RETURNS RECORD
 LANGUAGE plpgsql
 AS $$
 DECLARE
@@ -37,7 +38,7 @@ BEGIN
     p_total    := 0;
     p_error    := '';
 
-    -- Validaciones básicas de entrada
+    -- Validaciones sin cambios en BD (retorno suave)
     IF p_cliente_id IS NULL OR p_empleado_id IS NULL THEN
         p_error := 'cliente_id y empleado_id son obligatorios';
         RETURN;
@@ -48,13 +49,11 @@ BEGIN
         RETURN;
     END IF;
 
-    -- Verificar que el cliente existe
     IF NOT EXISTS (SELECT 1 FROM clientes WHERE id = p_cliente_id) THEN
         p_error := 'Cliente ' || p_cliente_id || ' no existe';
         RETURN;
     END IF;
 
-    -- Verificar que el empleado existe
     IF NOT EXISTS (SELECT 1 FROM empleados WHERE id = p_empleado_id) THEN
         p_error := 'Empleado ' || p_empleado_id || ' no existe';
         RETURN;
@@ -72,9 +71,7 @@ BEGIN
         v_cantidad := (v_item->>'cantidad')::INT;
 
         IF v_cantidad <= 0 THEN
-            p_error := 'La cantidad debe ser mayor a cero';
-            ROLLBACK;
-            RETURN;
+            RAISE EXCEPTION 'La cantidad debe ser mayor a cero';
         END IF;
 
         -- Bloquear fila para evitar condiciones de carrera
@@ -85,17 +82,12 @@ BEGIN
            FOR UPDATE;
 
         IF NOT FOUND THEN
-            p_error := 'Producto con id ' || v_prod_id || ' no existe';
-            ROLLBACK;
-            RETURN;
+            RAISE EXCEPTION 'Producto con id % no existe', v_prod_id;
         END IF;
 
         IF v_stock < v_cantidad THEN
-            p_error := 'Stock insuficiente para "' || v_nombre ||
-                       '". Disponible: ' || v_stock ||
-                       ', solicitado: ' || v_cantidad;
-            ROLLBACK;
-            RETURN;
+            RAISE EXCEPTION 'Stock insuficiente para "%". Disponible: %, solicitado: %',
+                v_nombre, v_stock, v_cantidad;
         END IF;
 
         v_subtotal := v_precio * v_cantidad;
@@ -110,14 +102,12 @@ BEGIN
     -- Actualizar total real de la venta
     UPDATE ventas SET total = p_total WHERE id = p_venta_id;
 
-    COMMIT;
-
 EXCEPTION
     WHEN OTHERS THEN
-        p_error    := 'Error interno: ' || SQLERRM;
+        -- EXCEPTION block revierte automáticamente todos los cambios del bloque
+        p_error    := SQLERRM;
         p_venta_id := 0;
         p_total    := 0;
-        ROLLBACK;
 END;
 $$;
 
@@ -169,8 +159,7 @@ BEGIN
 
 EXCEPTION
     WHEN OTHERS THEN
-        -- Revertir el update dentro de la transacción del llamador
-        UPDATE productos SET stock = stock - p_delta WHERE id = p_producto_id;
+        -- PL/pgSQL revierte el UPDATE automáticamente vía savepoint interno
         p_error       := SQLERRM;
         p_stock_nuevo := -1;
 END;

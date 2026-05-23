@@ -80,9 +80,9 @@ router.post('/',
     const { cliente_id, empleado_id, items } = req.body;
 
     try {
-      // sp_registrar_venta maneja la transacción con ROLLBACK interno
+      // sp_registrar_venta usa EXCEPTION para revertir cambios en caso de error
       const result = await pool.query(
-        'CALL sp_registrar_venta($1, $2, $3::json, 0, 0::numeric, \'\')',
+        'SELECT p_venta_id, p_total, p_error FROM sp_registrar_venta($1, $2, $3::json)',
         [cliente_id, empleado_id, JSON.stringify(items)]
       );
 
