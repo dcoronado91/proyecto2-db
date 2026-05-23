@@ -13,6 +13,7 @@ import Carrito        from './pages/Carrito'
 import { useAuth }    from './context/AuthContext'
 import {
   ROLES_STAFF,
+  ROLES_CATALOGO,
   ROLES_DASHBOARD,
   ROLES_VENTAS,
   ROLES_REPORTES,
@@ -48,11 +49,15 @@ const RoleRoute = ({ children, roles }) => {
   return children
 }
 
-// Ruta exclusiva para clientes (redirige staff al dashboard)
+// Ruta exclusiva para clientes (redirige staff a su página de inicio)
 const ClientRoute = ({ children }) => {
   const { auth } = useAuth()
   if (!auth.token) return <Navigate to="/login" replace />
-  if (ROLES_STAFF.includes(auth.rol)) return <Navigate to="/dashboard" replace />
+  if (ROLES_STAFF.includes(auth.rol)) {
+    return auth.rol === 'bodeguero'
+      ? <Navigate to="/admin/productos" replace />
+      : <Navigate to="/dashboard" replace />
+  }
   return children
 }
 
@@ -60,6 +65,7 @@ const ClientRoute = ({ children }) => {
 const HomeRedirect = () => {
   const { auth } = useAuth()
   if (!auth.token) return <Navigate to="/login" replace />
+  if (auth.rol === 'bodeguero') return <Navigate to="/admin/productos" replace />
   return ROLES_STAFF.includes(auth.rol)
     ? <Navigate to="/dashboard" replace />
     : <Navigate to="/productos" replace />
@@ -81,12 +87,12 @@ export default function App() {
         <Route path="/login"    element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Catálogo: cualquier usuario autenticado */}
+        {/* Catálogo: todos menos bodeguero (él usa Inventario) */}
         <Route path="/productos" element={
-          <PrivateRoute><Layout><Productos /></Layout></PrivateRoute>
+          <RoleRoute roles={ROLES_CATALOGO}><Layout><Productos /></Layout></RoleRoute>
         } />
         <Route path="/producto/:id" element={
-          <PrivateRoute><Layout><Producto /></Layout></PrivateRoute>
+          <RoleRoute roles={ROLES_CATALOGO}><Layout><Producto /></Layout></RoleRoute>
         } />
 
         {/* Carrito: solo clientes */}

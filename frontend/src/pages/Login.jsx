@@ -18,7 +18,9 @@ export default function Login() {
     try {
       const { data } = await api.post('/auth/login', form)
       login(data)
-      navigate(ROLES_STAFF.includes(data.rol) ? '/dashboard' : '/productos')
+      if (data.rol === 'bodeguero') navigate('/admin/productos')
+      else if (ROLES_STAFF.includes(data.rol)) navigate('/dashboard')
+      else navigate('/productos')
     } catch (err) {
       setError(err.response?.data?.error || 'Credenciales incorrectas')
     } finally {

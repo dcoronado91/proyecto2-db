@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import {
   ROLES_STAFF,
+  ROLES_CATALOGO,
   ROLES_DASHBOARD,
   ROLES_VENTAS,
   ROLES_REPORTES,
@@ -12,7 +13,7 @@ import {
 
 // Cada link se muestra solo si el rol del usuario está en `roles`
 const NAV_LINKS = [
-  { to: '/productos',       label: 'Productos',  roles: null },          // todos
+  { to: '/productos',       label: 'Productos',  roles: ROLES_CATALOGO },
   { to: '/dashboard',       label: 'Dashboard',  roles: ROLES_DASHBOARD },
   { to: '/ventas',          label: 'Ventas',     roles: ROLES_VENTAS },
   { to: '/reportes',        label: 'Reportes',   roles: ROLES_REPORTES },
