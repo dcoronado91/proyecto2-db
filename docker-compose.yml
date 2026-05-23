@@ -35,6 +35,7 @@ services:
       DATABASE_URL: postgres://proy3:secret@db:5432/tienda
       JWT_SECRET: clave_super_secreta_cambiar_en_produccion
       PORT: 4000
+      FRONTEND_URL: http://localhost:5173
     ports:
       - "4000:4000"
     depends_on:
