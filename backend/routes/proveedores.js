@@ -30,7 +30,7 @@ const reglasProveedor = [
     .optional({ nullable: true, checkFalsy: true })
     .trim()
     .isLength({ max: 20 }).withMessage('El teléfono no puede superar 20 caracteres')
-    .matches(/^[\d\s\-\+\(\)]+$/).withMessage('El teléfono solo puede contener dígitos y caracteres +, -, (, )'),
+    .matches(/^[\d\s\-\+\(\)]+$/).withMessage('Teléfono inválido'),
   body('direccion')
     .optional({ nullable: true, checkFalsy: true })
     .trim()
@@ -43,9 +43,11 @@ const reglasId = [
     .toInt(),
 ];
 
-const lecturaRoles = ['admin', 'gerente', 'bodeguero', 'vendedor', 'cajero'];
+// Lectura: admin, gerente y bodeguero
+// Vendedor y cajero no necesitan info de proveedores para su trabajo
+const lecturaRoles  = ['admin', 'gerente', 'bodeguero'];
+const escrituraRoles = ['admin', 'bodeguero'];
 
-// GET /api/proveedores
 router.get('/', auth, authorize(...lecturaRoles), async (req, res) => {
   try {
     const proveedores = await Proveedor.findAll({ order: [['nombre', 'ASC']] });
@@ -55,7 +57,6 @@ router.get('/', auth, authorize(...lecturaRoles), async (req, res) => {
   }
 });
 
-// GET /api/proveedores/:id
 router.get('/:id',
   auth, authorize(...lecturaRoles),
   reglasId, validarCampos,
@@ -70,9 +71,8 @@ router.get('/:id',
   }
 );
 
-// POST /api/proveedores
 router.post('/',
-  auth, authorize('admin', 'bodeguero'),
+  auth, authorize(...escrituraRoles),
   reglasProveedor, validarCampos,
   async (req, res) => {
     try {
@@ -93,9 +93,8 @@ router.post('/',
   }
 );
 
-// PUT /api/proveedores/:id
 router.put('/:id',
-  auth, authorize('admin', 'bodeguero'),
+  auth, authorize(...escrituraRoles),
   reglasId, reglasProveedor, validarCampos,
   async (req, res) => {
     try {
@@ -119,7 +118,6 @@ router.put('/:id',
   }
 );
 
-// DELETE /api/proveedores/:id
 router.delete('/:id',
   auth, authorize('admin'),
   reglasId, validarCampos,

@@ -14,27 +14,29 @@ const validarCampos = (req, res, next) => {
   next();
 };
 
-const staffRoles = ['admin', 'gerente', 'vendedor', 'cajero', 'bodeguero'];
+// Solo roles que necesitan ver empleados:
+// - admin y gerente: gestión y reportes
+// - vendedor y cajero: necesitan el listado para asignar empleado_id al crear ventas
+// - bodeguero: NO necesita datos de RRHH
+const rolesPermitidos = ['admin', 'gerente', 'vendedor', 'cajero'];
 
-// GET /api/empleados
-router.get('/', auth, authorize(...staffRoles), async (req, res) => {
+router.get('/', auth, authorize(...rolesPermitidos), async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM empleados ORDER BY nombre');
+    const { rows } = await pool.query('SELECT id, nombre, puesto FROM empleados ORDER BY nombre');
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// GET /api/empleados/:id
 router.get('/:id',
-  auth, authorize(...staffRoles),
+  auth, authorize(...rolesPermitidos),
   [param('id').isInt({ min: 1 }).withMessage('id inválido').toInt()],
   validarCampos,
   async (req, res) => {
     try {
       const { rows } = await pool.query(
-        'SELECT * FROM empleados WHERE id = $1',
+        'SELECT id, nombre, puesto FROM empleados WHERE id = $1',
         [req.params.id]
       );
       if (!rows.length) return res.status(404).json({ error: 'Empleado no encontrado' });
