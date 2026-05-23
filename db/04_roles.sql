@@ -68,11 +68,12 @@ REVOKE DELETE
 -- ─────────────────────────────────────────────
 -- ROL_VENDEDOR
 -- Puede crear ventas y leer catálogo.
--- Sin acceso a empleados ni administración.
+-- Necesita ver empleados para asignar empleado_id.
+-- Sin acceso a proveedores ni datos de administración.
 -- ─────────────────────────────────────────────
 GRANT SELECT
-  ON productos, categorias, proveedores, clientes,
-     ventas, detalle_venta
+  ON productos, categorias, clientes,
+     ventas, detalle_venta, empleados
   TO rol_vendedor;
 
 GRANT INSERT
@@ -88,7 +89,7 @@ GRANT USAGE, SELECT
   TO rol_vendedor;
 
 REVOKE SELECT, INSERT, UPDATE, DELETE
-  ON usuarios, empleados
+  ON usuarios, proveedores
   FROM rol_vendedor;
 
 -- ─────────────────────────────────────────────
