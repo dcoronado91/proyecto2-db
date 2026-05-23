@@ -21,15 +21,6 @@
 
 Sistema de gestión para una tienda de tecnología construido como proyecto universitario. Cubre el ciclo completo: autenticación con roles, catálogo de productos, registro de ventas con transacciones y ROLLBACK visible, reportes SQL avanzados y portal de compra para clientes.
 
-## Demo en producción
-
-| Servicio | URL |
-|---|---|
-| Frontend (Netlify) | https://tienda-tech-frontend.netlify.app/ |
-| Backend / API (Vercel) | https://tienda-tech-liart.vercel.app/ |
-
----
-
 ## Stack tecnológico
 
 | Capa | Tecnología |
@@ -73,21 +64,19 @@ docker compose up
 
 ---
 
-## Crear usuarios de prueba
+## Usuarios de prueba
 
-La base de datos incluye datos semilla (clientes, empleados, productos, ventas). Los usuarios deben crearse manualmente mediante el endpoint de registro o desde el frontend.
+La base de datos incluye usuarios precargados listos para usar. **Contraseña de todos: `secret`**
 
-**Desde el frontend:** ir a `http://localhost:5173/register` para crear una cuenta de cliente.
+| Username       | Rol        | Acceso                                                  |
+|----------------|------------|---------------------------------------------------------|
+| `admin_p3`     | admin      | Todo: dashboard, ventas, reportes, inventario, clientes |
+| `gerente_p3`   | gerente    | Dashboard, ventas, reportes, clientes                   |
+| `vendedor_p3`  | vendedor   | Dashboard, ventas                                       |
+| `bodeguero_p3` | bodeguero  | Inventario                                              |
+| `cliente_p3`   | cliente    | Catálogo de productos, carrito                          |
 
-**Desde Postman / curl** (para roles de staff):
-
-```json
-POST http://localhost:4000/api/auth/register
-
-{ "username": "derek",     "password": "1234", "rol": "admin"   }
-{ "username": "vendedor1", "password": "1234", "rol": "vendedor" }
-{ "username": "gerente1",  "password": "1234", "rol": "gerente"  }
-```
+Para crear usuarios adicionales ir a `http://localhost:5173/register` (crea rol `cliente`) o usar el endpoint `POST /api/auth/register` con el rol deseado.
 
 ### Roles y permisos
 
@@ -152,8 +141,7 @@ proyecto2/
 
 ## API Reference
 
-Base URL (local): `http://localhost:4000/api`
-Base URL (producción): `https://tienda-tech-liart.vercel.app/api`
+Base URL: `http://localhost:4000/api`
 
 Las rutas marcadas con 🔒 requieren el header `Authorization: Bearer <token>`.
 
@@ -690,18 +678,6 @@ Definidos en `db/04_roles.sql` mediante `CREATE ROLE` con permisos granulares (`
 | `rol_vendedor` | vendedor/cajero| productos, clientes, categorías, proveedores, ventas       | SELECT; INSERT en ventas; UPDATE stock        |
 | `rol_bodeguero`| bodeguero      | productos, categorías, proveedores                         | SELECT, INSERT, UPDATE; DELETE en productos   |
 | `rol_cliente`  | cliente        | productos, categorías, ventas, detalle_venta               | Solo SELECT                                   |
-
----
-
-### Usuarios de prueba (contraseña: `secret`)
-
-| Username       | Rol          | Acceso en la UI                                    |
-|----------------|--------------|----------------------------------------------------|
-| `admin_p3`     | admin        | Todo: dashboard, ventas, reportes, inventario, clientes |
-| `gerente_p3`   | gerente      | Dashboard, ventas, reportes, clientes              |
-| `vendedor_p3`  | vendedor     | Dashboard, ventas                                  |
-| `bodeguero_p3` | bodeguero    | Inventario                                         |
-| `cliente_p3`   | cliente      | Catálogo de productos, carrito                     |
 
 ---
 
