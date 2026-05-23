@@ -58,7 +58,7 @@ router.get('/:id',
 
 // POST /api/ventas — invoca sp_registrar_venta (stored procedure con ROLLBACK)
 router.post('/',
-  auth, authorize('admin', 'gerente', 'vendedor', 'cajero'),
+  auth, authorize('admin', 'gerente', 'vendedor', 'cajero', 'cliente'),
   [
     body('cliente_id')
       .isInt({ min: 1 }).withMessage('cliente_id debe ser un entero positivo')
@@ -78,6 +78,11 @@ router.post('/',
   validarCampos,
   async (req, res) => {
     const { cliente_id, empleado_id, items } = req.body;
+
+    // Un cliente solo puede crear ventas con su propio cliente_id
+    if (req.usuario.rol === 'cliente' && req.usuario.cliente_id !== cliente_id) {
+      return res.status(403).json({ error: 'Solo puedes crear ventas asociadas a tu propia cuenta.' });
+    }
 
     try {
       // sp_registrar_venta usa EXCEPTION para revertir cambios en caso de error

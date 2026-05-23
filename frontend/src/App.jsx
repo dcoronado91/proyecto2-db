@@ -13,6 +13,7 @@ import Carrito        from './pages/Carrito'
 import { useAuth }    from './context/AuthContext'
 import {
   ROLES_STAFF,
+  ROLES_DASHBOARD,
   ROLES_VENTAS,
   ROLES_REPORTES,
   ROLES_INVENTARIO,
@@ -93,9 +94,9 @@ export default function App() {
           <ClientRoute><Layout><Carrito /></Layout></ClientRoute>
         } />
 
-        {/* Dashboard: todo el staff */}
+        {/* Dashboard: staff con acceso a ventas (bodeguero excluido) */}
         <Route path="/dashboard" element={
-          <RoleRoute roles={ROLES_STAFF}><Layout><Dashboard /></Layout></RoleRoute>
+          <RoleRoute roles={ROLES_DASHBOARD}><Layout><Dashboard /></Layout></RoleRoute>
         } />
 
         {/* Ventas: admin, gerente, vendedor, cajero */}

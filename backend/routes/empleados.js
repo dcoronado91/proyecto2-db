@@ -17,8 +17,9 @@ const validarCampos = (req, res, next) => {
 // Solo roles que necesitan ver empleados:
 // - admin y gerente: gestión y reportes
 // - vendedor y cajero: necesitan el listado para asignar empleado_id al crear ventas
+// - cliente: necesita el listado para seleccionar vendedor en el carrito
 // - bodeguero: NO necesita datos de RRHH
-const rolesPermitidos = ['admin', 'gerente', 'vendedor', 'cajero'];
+const rolesPermitidos = ['admin', 'gerente', 'vendedor', 'cajero', 'cliente'];
 
 router.get('/', auth, authorize(...rolesPermitidos), async (req, res) => {
   try {
